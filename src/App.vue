@@ -7,10 +7,13 @@ const route = useRoute()
 </script>
 
 <template>
-    <AppShell v-if="route.meta.layout === 'app'">
+    <AppShell
+        v-if="route.meta.layout === 'app' || route.meta.layout === 'sub'"
+        :nav="route.meta.layout === 'app'"
+    >
         <RouterView v-slot="{ Component }">
             <Transition name="page" mode="out-in">
-                <component :is="Component" />
+                <component :is="Component" :key="route.fullPath" />
             </Transition>
         </RouterView>
     </AppShell>

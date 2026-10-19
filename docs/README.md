@@ -11,7 +11,7 @@ Osobná kávová aplikácia, optimalizovaná pre mobil a inštaláciu ako PWA. V
 | 3rd party služby | [03-third-party.md](03-third-party.md) | schválené |
 | Offline a synchronizácia | [04-offline-sync.md](04-offline-sync.md) | schválené |
 | Vizuálny štýl | [05-design.md](05-design.md) | schválené (upravuje sa priebežne) |
-| Obsah (moduly) | [content/README.md](content/README.md) | Coffees, Recipes, Brew schválené, Stats plán |
+| Obsah (moduly) | [content/README.md](content/README.md) | Coffees implementované, Recipes a Brew schválené, Stats plán |
 | Rozhodnutia, otvorené otázky, testy | [decisions.md](decisions.md) | priebežne |
 
 ## Plán implementácie
@@ -20,8 +20,8 @@ Osobná kávová aplikácia, optimalizovaná pre mobil a inštaláciu ako PWA. V
 |---|---|---|
 | **F0: Základ** ✅ (lokálne hotové) | Scaffold (Vite, Vue, TS, Tailwind), Supabase klient, prihlásenie, app shell s navigáciou, PWA (manifest, service worker, update banner), Settings (logout, téma), GitHub workflowy deploy / unpublish | Vlastník založí Supabase projekt a GitHub repozitár |
 | **F0.1: Test T1** | Inštalácia na mobil, unpublish, overenie behu appky | F0 nasadené |
-| **F1: Dáta a sync** | Migrácie (`profiles`, spoločné stĺpce, RLS, triggery), Dexie, outbox, sync engine, indikátor synchronizácie, Storage pre fotky | F0 |
-| **F2: Coffees** | [content/coffees.md](content/coffees.md) | F1 |
+| **F1: Dáta a sync** ✅ (lokálne hotové) | Migrácie (`profiles`, spoločné stĺpce, RLS, triggery), Dexie, outbox, sync engine, indikátor synchronizácie, Storage pre fotky | F0 |
+| **F2: Coffees** ✅ (lokálne hotové) | [content/coffees.md](content/coffees.md) | F1 |
 | **F3: Recipes** | [content/recipes.md](content/recipes.md) vrátane vzorových receptov | F1 |
 | **F4: Brew** | [content/brew.md](content/brew.md), testy T2 a T3 | F2, F3 |
 | **F5: Stats a export** | [content/stats.md](content/stats.md) | F4 |

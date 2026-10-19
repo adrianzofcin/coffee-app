@@ -1,3 +1,8 @@
+<script setup lang="ts">
+/** Optional label colour (e.g. by roast level); defaults to the accent. */
+defineProps<{ color?: string }>()
+</script>
+
 <template>
     <svg
         viewBox="0 0 120 120"
@@ -12,7 +17,12 @@
             class="fill-ill stroke-current"
             stroke-width="3.5"
         />
-        <path d="M34 16h52v14H34z" class="fill-accent stroke-current" stroke-width="3.5" />
+        <path
+            d="M34 16h52v14H34z"
+            :class="color ? 'stroke-current' : 'fill-accent stroke-current'"
+            :style="color ? { fill: color } : undefined"
+            stroke-width="3.5"
+        />
         <path d="M42 23h36" class="stroke-cream" stroke-width="2.5" stroke-dasharray="2 5" />
         <circle cx="60" cy="68" r="17" class="fill-accent/15 stroke-current" stroke-width="3" />
         <ellipse
@@ -21,7 +31,8 @@
             rx="7"
             ry="10"
             transform="rotate(-25 60 68)"
-            class="fill-accent-deep"
+            :class="color ? '' : 'fill-accent-deep'"
+            :style="color ? { fill: color } : undefined"
         />
         <path d="M57 60c4 4-2 10 3 16" class="stroke-cream" stroke-width="2" />
         <path d="M46 92h28" class="stroke-current" stroke-width="3" opacity="0.35" />

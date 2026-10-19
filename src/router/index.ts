@@ -4,7 +4,8 @@ import { useAuthStore } from '@/stores/auth'
 declare module 'vue-router' {
     interface RouteMeta {
         guest?: boolean
-        layout?: 'app' | 'blank'
+        /** app = tab page with bottom nav, sub = detail/form page with a back button */
+        layout?: 'app' | 'sub' | 'blank'
         title?: string
     }
 }
@@ -24,6 +25,24 @@ const router = createRouter({
             name: 'coffees',
             component: () => import('@/pages/CoffeesPage.vue'),
             meta: { layout: 'app', title: 'Coffees' },
+        },
+        {
+            path: '/coffees/new',
+            name: 'coffee-new',
+            component: () => import('@/pages/coffees/CoffeeFormPage.vue'),
+            meta: { layout: 'sub', title: 'New coffee' },
+        },
+        {
+            path: '/coffees/:id',
+            name: 'coffee',
+            component: () => import('@/pages/coffees/CoffeeDetailPage.vue'),
+            meta: { layout: 'sub', title: 'Coffee' },
+        },
+        {
+            path: '/coffees/:id/edit',
+            name: 'coffee-edit',
+            component: () => import('@/pages/coffees/CoffeeFormPage.vue'),
+            meta: { layout: 'sub', title: 'Edit coffee' },
         },
         {
             path: '/recipes',

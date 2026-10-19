@@ -24,13 +24,16 @@
 | D16 | 2026-10-19 | Pripomienka Cold Brew cez udalosť v kalendári (`.ics`), nie push notifikácia | PWA bez push servera nevie naplánovať notifikáciu |
 | D17 | 2026-10-19 | Vizuálny štýl „Warm Minimal“ (krémová / espresso, karamelový akcent, Inter), viď [05-design.md](05-design.md) | Výber vlastníka, upravuje sa priebežne |
 | D18 | 2026-10-19 | TypeScript zafixovaný na 5.9 | typescript-eslint zatiaľ nepodporuje TypeScript 7 |
+| D19 | 2026-10-19 | Krajina pôvodu: predvolený zoznam s vlajkami + voľný text, vlastné hodnoty sa ponúkajú z existujúcich káv | Rýchly výber bez obmedzenia, bez ďalšej tabuľky |
+| D20 | 2026-10-19 | Hodnotenie kávy: ručné ★ pri káve + neskôr priemer príprav v štatistikách | Výber vlastníka |
+| D21 | 2026-10-19 | Odobratie gramov alebo zníženie váhy zapečateného balíčka ho prepne na `open` | Odobratie kávy znamená, že je otvorený |
+| D22 | 2026-10-19 | Fotka dostane pri každej zmene nový názov súboru, staré súbory sa zatiaľ nemažú | Žiadna zastaraná cache. Upratovanie Storage sa rieši, ak to bude treba |
+| D23 | 2026-10-19 | Doména technických e-mailov `coffee.local`, repozitár `adrianzofcin/coffee-app` (URL `adrianzofcin.github.io/coffee-app/`) | Uzatvára Q3 a Q7 |
 
-## Otvorené otázky
+## Otvorené otázky a testy
 
 | # | Otázka | Ovplyvňuje |
 |---|---|---|
-| Q3 | Doména pre technické e-maily (`VITE_AUTH_EMAIL_DOMAIN`) | Auth, rieši sa pri zakladaní Supabase |
-| Q7 | Názov GitHub účtu a repozitára (určuje finálnu URL) | Deploy, `base` vo Vite |
-| T1 | Test: appka beží ďalej po unpublish (Android + iOS), viď [03-third-party.md](03-third-party.md) | Overiť hneď po scaffolde |
+| T1 | Test: appka beží ďalej po unpublish (Android + iOS), viď [03-third-party.md](03-third-party.md) | 2026-10-19: po unpublish sa nainštalovaná appka otvára z cache. Ostáva overiť po niekoľkých dňoch a reštarte telefónu |
 | T2 | Test: pripomienka `.ics` z nainštalovanej PWA (Android + iOS), viď [content/brew.md](content/brew.md) | Po implementácii Brew |
 | T3 | Test: zvuk pri stíšenom zvonení a Wake Lock v nainštalovanej PWA | Po implementácii Brew |

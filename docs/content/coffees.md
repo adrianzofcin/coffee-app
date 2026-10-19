@@ -1,6 +1,6 @@
 # Modul 1: Coffees
 
-- **Stav:** schválené
+- **Stav:** implementované (F2), čaká na test na mobile
 - **Posledná úprava:** 2026-10-19
 
 ## Účel
@@ -27,7 +27,7 @@ Všetky tabuľky majú spoločné stĺpce podľa [04-offline-sync.md](../04-offl
 |---|---|---|---|
 | `name` | `text` | áno | Názov kávy |
 | `roaster` | `text` | áno | Pražiareň (voľný text, našepkávanie z predchádzajúcich) |
-| `country` | `text` | | Krajina pôvodu |
+| `country` | `text` | | Krajina pôvodu: výber z predvoleného zoznamu pestovateľských krajín s vlajkou alebo voľný text. Vlastné hodnoty sa ďalej ponúkajú v našepkávaní |
 | `region` | `text` | | Región |
 | `producer` | `text` | | Farma / producent |
 | `variety` | `text` | | Odroda (napr. *Bourbon, Gesha*) |
@@ -114,7 +114,7 @@ Rýchly formulár, povinné je len minimum:
 | Name | |
 | Roaster | Našepkávanie z predchádzajúcich pražiarní |
 | Roast date | Date picker, default dnes |
-| Weight | Rýchla voľba `250 g` / `500 g` / `1 kg` + vlastná hodnota |
+| Weight | Rýchla voľba `200 g` / `250 g` / `500 g` / `1 kg` + vlastná hodnota |
 | **More details** (zbalené) | Fotka, pôvod, spracovanie, roast level, intended for, decaf, tasting notes, cena, dátum kúpy, frozen, poznámky |
 
 - Ak kombinácia *Name + Roaster* už existuje, appka ponúkne: „You already have this coffee. Add as a new bag?“ → vytvorí sa len nový balíček.
@@ -143,7 +143,7 @@ Roast date, weight, price, purchase date, frozen.
 
 ## Automatické správanie
 
-- **Prvá príprava** z balíčka v stave `sealed` ho automaticky prepne na `open`.
+- **Prvá príprava** z balíčka v stave `sealed` ho automaticky prepne na `open`. To isté platí pre *Remove grams* a pre *Set actual weight*, ak zostatok klesne.
 - Keď zostatok po príprave alebo korekcii klesne **pod 5 g**, appka sa opýta: „Only X g left. Mark bag as finished?“
 - Zmazanie kávy zmaže (soft delete) aj jej balíčky. Prípravy ostávajú v histórii a štatistikách s označením „Deleted coffee“.
 
@@ -172,6 +172,10 @@ Roast date, weight, price, purchase date, frozen.
 - [ ] Fotka sa pred uložením zmenší a skomprimuje a zobrazí sa aj offline.
 - [ ] Všetky akcie fungujú offline a po pripojení sa zosynchronizujú.
 - [ ] Zmazanie kávy vyžaduje potvrdenie.
+
+## Hodnotenie
+
+Ručné hodnotenie 1–5 ★ pri káve (moje celkové hodnotenie). Po implementácii modulu Brew sa v štatistikách zobrazí aj priemer hodnotení príprav. Obe hodnoty sa dopĺňajú.
 
 ## Závislosti
 
