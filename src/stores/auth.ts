@@ -1,7 +1,9 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type { Session } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '@/lib/supabase'
+import { setCurrentUserId } from '@/lib/data/session'
+import { useSyncStore } from '@/stores/sync'
 import {
     classifySignInError,
     emailToUsername,
@@ -19,6 +21,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     const isAuthenticated = computed(() => session.value !== null)
     const username = computed(() => emailToUsername(session.value?.user.email))
+    const userId = computed(() => session.value?.user.id ?? null)
+
+    // Token refreshes keep the same user id, so sync only restarts on a real account change.
+    watch(userId, (id, previous) => {
+        setCurrentUserId(id)
+        if (id && id !== previous) void useSyncStore().start(id)
+    })
 
     function init(): Promise<void> {
         initPromise ??= (async () => {
@@ -61,11 +70,13 @@ export const useAuthStore = defineStore('auth', () => {
         return null
     }
 
+    /** Signs out on this device and wipes its local copy of the data. */
     async function signOut(): Promise<void> {
-        // Local scope clears this device even when offline.
+        await useSyncStore().clearLocalData()
+        // Local scope works offline too.
         await supabase?.auth.signOut({ scope: 'local' })
         session.value = null
     }
 
-    return { session, ready, isAuthenticated, username, init, signIn, signOut }
+    return { session, ready, isAuthenticated, username, userId, init, signIn, signOut }
 })

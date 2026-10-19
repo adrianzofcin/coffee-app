@@ -12,6 +12,9 @@ dev-dist
 # Generated documents (never commit)
 /docs/temp
 
+# Supabase CLI local state (project ref, pooler URL)
+/supabase/.temp
+
 # Editors & OS
 /.idea
 /.vscode/*

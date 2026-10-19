@@ -1,7 +1,20 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronRight, LogOut, Monitor, Moon, RefreshCw, Sparkles, Sun } from 'lucide-vue-next'
+import {
+    ChevronRight,
+    CloudAlert,
+    CloudCheck,
+    CloudOff,
+    CloudUpload,
+    LogOut,
+    Monitor,
+    Moon,
+    RefreshCw,
+    Sparkles,
+    Sun,
+    TriangleAlert,
+} from 'lucide-vue-next'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
@@ -9,9 +22,50 @@ import InstallHint from '@/components/InstallHint.vue'
 import { useAuthStore } from '@/stores/auth'
 import { usePwaStore, type UpdateCheckResult } from '@/stores/pwa'
 import { useThemeStore, type ThemeMode } from '@/stores/theme'
+import { useSyncStore } from '@/stores/sync'
+import { formatRelativeTime } from '@/modules/coffees/format'
 
 const auth = useAuthStore()
 const pwa = usePwaStore()
+const sync = useSyncStore()
+
+const unsynced = computed(() => sync.pendingCount + sync.failedCount)
+const lastSynced = computed(() =>
+    sync.state.lastSyncedAt
+        ? `Last synced ${formatRelativeTime(sync.state.lastSyncedAt)}`
+        : 'Not synced yet',
+)
+const syncInfo = computed(() => {
+    if (sync.isSyncing)
+        return { icon: RefreshCw, tone: 'text-accent', title: 'Syncing…', detail: lastSynced.value }
+    if (sync.state.status === 'error') {
+        return {
+            icon: CloudAlert,
+            tone: 'text-danger',
+            title: 'Sync failed',
+            detail: sync.state.error ?? lastSynced.value,
+        }
+    }
+    if (sync.state.status === 'offline') {
+        const waiting = sync.pendingCount > 0 ? `${sync.pendingCount} changes waiting · ` : ''
+        return {
+            icon: CloudOff,
+            tone: 'text-text-muted',
+            title: 'Offline',
+            detail: `${waiting}${lastSynced.value}`,
+        }
+    }
+    if (sync.pendingCount > 0) {
+        return {
+            icon: CloudUpload,
+            tone: 'text-accent',
+            title: `${sync.pendingCount} changes waiting`,
+            detail: lastSynced.value,
+        }
+    }
+
+    return { icon: CloudCheck, tone: 'text-success', title: 'All synced', detail: lastSynced.value }
+})
 const theme = useThemeStore()
 const router = useRouter()
 
@@ -102,6 +156,59 @@ async function logout(): Promise<void> {
                 </div>
             </section>
 
+            <section class="animate-rise [animation-delay:90ms]">
+                <h2
+                    class="mb-2.5 px-1 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
+                >
+                    Sync
+                </h2>
+                <div
+                    class="divide-y divide-border/70 overflow-hidden rounded-card border border-border/60 bg-surface"
+                >
+                    <div class="flex items-center gap-3 p-4">
+                        <span
+                            class="flex size-9 items-center justify-center rounded-xl bg-accent/12"
+                        >
+                            <component
+                                :is="syncInfo.icon"
+                                class="size-[18px]"
+                                :class="syncInfo.tone"
+                            />
+                        </span>
+                        <span class="flex-1">
+                            <span class="block font-medium">{{ syncInfo.title }}</span>
+                            <span class="block text-sm text-text-muted">{{ syncInfo.detail }}</span>
+                        </span>
+                    </div>
+                    <div v-if="sync.failedCount > 0" class="space-y-2 p-4">
+                        <p class="text-sm text-danger">
+                            {{ sync.failedCount }}
+                            {{ sync.failedCount === 1 ? 'change was' : 'changes were' }} rejected by
+                            the server.
+                        </p>
+                        <AppButton variant="secondary" block @click="sync.retryFailed"
+                            >Retry</AppButton
+                        >
+                    </div>
+                    <button
+                        class="flex w-full items-center gap-3 p-4 text-left active:bg-surface-muted"
+                        :disabled="sync.isSyncing"
+                        @click="sync.syncNow"
+                    >
+                        <span
+                            class="flex size-9 items-center justify-center rounded-xl bg-accent/12"
+                        >
+                            <RefreshCw
+                                class="size-[18px] text-accent"
+                                :class="{ 'animate-spin': sync.isSyncing }"
+                            />
+                        </span>
+                        <span class="flex-1 font-medium">Sync now</span>
+                        <ChevronRight class="size-5 text-text-muted" />
+                    </button>
+                </div>
+            </section>
+
             <section class="animate-rise [animation-delay:120ms]">
                 <h2
                     class="mb-2.5 px-1 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
@@ -155,10 +262,32 @@ async function logout(): Promise<void> {
         </div>
 
         <BottomSheet v-model:open="confirmLogout" title="Log out?">
+            <div
+                v-if="unsynced > 0"
+                class="mb-4 flex gap-3 rounded-control bg-warning/12 p-3 text-sm text-text"
+            >
+                <TriangleAlert class="size-5 shrink-0 text-warning" />
+                <p>
+                    <strong
+                        >{{ unsynced }} {{ unsynced === 1 ? 'change has' : 'changes have' }} not
+                        been synced yet</strong
+                    >
+                    and will be lost. Connect to the internet and sync first.
+                </p>
+            </div>
             <p class="mb-5 text-text-muted">
-                You'll need your username and password to sign in again.
+                Your data stays safe in the cloud. You'll need your username and password to sign in
+                again.
             </p>
             <div class="space-y-2">
+                <AppButton
+                    v-if="unsynced > 0"
+                    block
+                    :loading="sync.isSyncing"
+                    @click="sync.syncNow"
+                >
+                    Sync now
+                </AppButton>
                 <AppButton variant="danger" block :loading="loggingOut" @click="logout"
                     >Log out</AppButton
                 >

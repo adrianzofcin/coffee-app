@@ -43,6 +43,13 @@ Never put the `service_role` / secret key anywhere in this project.
 
 Users sign in with the username only; the app appends the domain. Sessions never expire unless you log out or change the password.
 
+### Database migrations
+
+The schema lives in `supabase/migrations/` (applied in file-name order). Either:
+
+- **Supabase CLI** (once: `npx supabase login` and `npx supabase link --project-ref <ref>`), then `npx supabase db push`, or
+- paste each new migration file into **SQL Editor** in the Supabase dashboard and run it.
+
 ## Deploy (GitHub Pages)
 
 One-time setup in the GitHub repository:
