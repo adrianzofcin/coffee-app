@@ -1,7 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-    <rect width="512" height="512" rx="112" fill="#C8773A"/>
-    <g transform="translate(256 262) rotate(-30)">
-        <ellipse cx="0" cy="0" rx="112" ry="152" fill="#FAF6F1"/>
-        <path d="M -6 -140 C 52 -84 -52 -28 6 24 C 52 64 -40 104 -4 142" fill="none" stroke="#C8773A" stroke-width="26" stroke-linecap="round"/>
-    </g>
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#3B2719"/>
+            <stop offset="1" stop-color="#140E0B"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="0.5" cy="0.44" r="0.56">
+            <stop offset="0" stop-color="#E09658" stop-opacity="0.5"/>
+            <stop offset="1" stop-color="#E09658" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="porcelain" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FFFDF9"/>
+            <stop offset="1" stop-color="#E6D9CA"/>
+        </linearGradient>
+        <radialGradient id="coffee" cx="0.42" cy="0.38" r="0.72">
+            <stop offset="0" stop-color="#C8773A"/>
+            <stop offset="0.55" stop-color="#94511F"/>
+            <stop offset="1" stop-color="#5A3114"/>
+        </radialGradient>
+        <radialGradient id="rim" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0.86" stop-color="#000" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0.28"/>
+        </radialGradient>
+    </defs>
+
+    <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+    <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+
+    <!-- saucer -->
+    <circle cx="246" cy="262" r="170" fill="#FAF6F1" fill-opacity="0.08"/>
+    <circle cx="246" cy="262" r="170" fill="none" stroke="#FAF6F1" stroke-opacity="0.16" stroke-width="4"/>
+
+    <!-- cup shadow, handle, cup -->
+    <circle cx="252" cy="274" r="126" fill="#000" fill-opacity="0.28"/>
+    <rect x="352" y="234" width="96" height="56" rx="28" fill="url(#porcelain)"/>
+    <circle cx="246" cy="262" r="126" fill="url(#porcelain)"/>
+
+    <!-- coffee with crema and latte-art heart -->
+    <circle cx="246" cy="262" r="102" fill="url(#coffee)"/>
+    <circle cx="246" cy="262" r="102" fill="url(#rim)"/>
+    <circle cx="246" cy="262" r="96" fill="none" stroke="#E4A66A" stroke-opacity="0.35" stroke-width="6"/>
+    <path
+        d="M246 326C214 306 190 284 190 254c0-22 16-36 34-36 11 0 18 6 22 14 4-8 11-14 22-14 18 0 34 14 34 36 0 30-24 52-56 72z"
+        fill="#FBF1E4"
+    />
 </svg>
