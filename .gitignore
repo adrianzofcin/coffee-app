@@ -1,0 +1,23 @@
+# Dependencies & build
+node_modules
+dist
+dev-dist
+*.tsbuildinfo
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Generated documents (never commit)
+/docs/temp
+
+# Editors & OS
+/.idea
+/.vscode/*
+!/.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

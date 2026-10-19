@@ -1,0 +1,74 @@
+name: Unpublish
+
+# Replaces the app on GitHub Pages with an empty placeholder (no service worker).
+# Installed apps keep running from their cache. Runs every night as a safety net.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.check.outputs.published }}
+    steps:
+      - id: check
+        name: Check whether the app is currently published
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          url="https://${owner}.github.io/${{ github.event.repository.name }}/"
+          if curl -fsSL "$url" | grep -q 'data-placeholder'; then
+            echo "Already unpublished: $url"
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check
+    # Manual runs always deploy the placeholder, the nightly run only when the app is live.
+    if: github.event_name == 'workflow_dispatch' || needs.check.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create placeholder
+        run: |
+          mkdir site
+          cat > site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en" data-placeholder>
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta name="robots" content="noindex" />
+              <title>Not available</title>
+            </head>
+            <body></body>
+          </html>
+          HTML
+          cp site/index.html site/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
