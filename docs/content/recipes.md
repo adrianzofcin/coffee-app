@@ -1,6 +1,6 @@
 # Modul 2: Recipes
 
-- **Stav:** schválené
+- **Stav:** implementované (F3), čaká na test na mobile
 - **Posledná úprava:** 2026-10-19
 
 ## Účel
@@ -63,11 +63,11 @@ Poradie krokov je dané poradím v poli. Trvanie kroku = `at_s` nasledujúceho k
 - Koeficient = `nová dávka / pôvodná dávka`.
 - Prepočíta sa `water_g`, `yield_g` a `target_water_g` všetkých krokov. Časy sa nemenia.
 - Zaokrúhlenie: dávka a espresso yield na 0.1 g, voda a cieľové váhy krokov na celé gramy.
-- Dostupné v editore (pole Dose s prepínačom **Scale recipe**) a pri spustení receptu (len pre danú prípravu, recept sa nemení).
+- Dostupné v editore (tlačidlo **Scale**), na detaile receptu (*Save as new recipe* / *Update this recipe*) a pri spustení receptu (len pre danú prípravu, recept sa nemení).
 
 ## Predpripravené recepty
 
-Pri prvom prihlásení (keď `profiles.recipes_seeded_at` je prázdne) appka vytvorí tri vzorové recepty a nastaví `recipes_seeded_at`. Zmazané vzorové recepty sa už znova nevytvoria.
+Vzorové recepty vytvára **databáza**, nie appka: funkcia `seed_recipes` sa spustí pri vzniku nového používateľa (a raz pre existujúcich v migrácii) a nastaví `profiles.recipes_seeded_at`. Dve zariadenia tak nikdy nevytvoria duplikáty a zmazané vzorové recepty sa už znova nevytvoria. Funkcia nie je volateľná cez API.
 
 | Recept | Parametre | Kroky |
 |---|---|---|
@@ -100,11 +100,13 @@ Pri prvom prihlásení (keď `profiles.recipes_seeded_at` je prázdne) appka vyt
 3. **Method specific**: polia podľa tabuľky vyššie.
 4. **Steps** (V60 a Cold Brew, pri Espresse voliteľné):
    - pridanie kroku (výber typu), úprava v bottom sheete (čas `m:ss`, cieľová váha, text),
-   - presúvanie (drag handle), mazanie,
+   - presúvanie šípkami ↑ ↓ (spoľahlivejšie ako ťahanie na mobile), mazanie,
    - prepínač **Timed / Manual** pre krok.
 5. **More**: priradená káva, Favorite, Notes.
 
-- Prepínač **Scale recipe** pri poli Dose: keď je zapnutý, zmena dávky prepočíta vodu a kroky.
+- Tlačidlo **Scale** v sekcii krokov otvorí prepočet (rovnaký bottom sheet ako na detaile) a výsledok prenesie do formulára.
+- Nový recept začína šablónou podľa metódy (V60: Bloom → Pour → Pour → Swirl, Cold Brew: manuálne kroky, Espresso bez krokov). Zmena metódy šablónu vymení, názov, mletie, kávu a poznámky ponechá.
+- Pri neúspešnom uložení sa obrazovka posunie k prvej chybe.
 - Pri odchode s neuloženými zmenami appka zobrazí potvrdenie.
 
 ### 4. Scale (bottom sheet)

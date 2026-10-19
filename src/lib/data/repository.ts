@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { enqueue } from '@/lib/sync/outbox'
 import { requireUserId } from '@/lib/data/session'
-import type { Draft, SyncTable, SyncTables } from '@/types/models'
+import type { Draft, SyncedRecord, SyncTable, SyncTables } from '@/types/models'
 
 type Listener = () => void
 
@@ -24,6 +24,16 @@ function nowIso(): string {
 
 export function newId(): string {
     return crypto.randomUUID()
+}
+
+/** Copy of a record without its system fields, ready to be inserted as a new one. */
+export function withoutSystemFields<T extends SyncedRecord>(record: T): Draft<T> {
+    const copy: Partial<T> = { ...record }
+    for (const field of ['id', 'user_id', 'created_at', 'updated_at', 'deleted_at'] as const) {
+        delete copy[field]
+    }
+
+    return copy as Draft<T>
 }
 
 /**
@@ -86,7 +96,7 @@ export function softDelete(table: SyncTable, id: string): Promise<void> {
 export async function batchWrite(work: () => Promise<void>): Promise<void> {
     await db.transaction(
         'rw',
-        [db.coffees, db.bags, db.bag_adjustments, db.outbox, db.photos],
+        [db.coffees, db.bags, db.bag_adjustments, db.recipes, db.outbox, db.photos],
         work,
     )
 }

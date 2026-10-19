@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { Bag, BagAdjustment, Coffee, SyncTable } from '@/types/models'
+import type { Bag, BagAdjustment, Coffee, Recipe, SyncTable } from '@/types/models'
 
 export interface OutboxEntry {
     seq?: number
@@ -30,6 +30,7 @@ export class AppDatabase extends Dexie {
     coffees!: Table<Coffee, string>
     bags!: Table<Bag, string>
     bag_adjustments!: Table<BagAdjustment, string>
+    recipes!: Table<Recipe, string>
     outbox!: Table<OutboxEntry, number>
     photos!: Table<LocalPhoto, string>
     meta!: Table<MetaEntry, string>
@@ -44,6 +45,11 @@ export class AppDatabase extends Dexie {
             outbox: '++seq, [table+key]',
             photos: 'path',
             meta: 'key',
+        })
+
+        // Module Recipes. New tables only, existing data stays untouched.
+        this.version(2).stores({
+            recipes: 'id, updated_at',
         })
     }
 

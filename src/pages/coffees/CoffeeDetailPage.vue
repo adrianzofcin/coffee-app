@@ -14,10 +14,15 @@ import { deleteCoffee, setRating } from '@/modules/coffees/actions'
 import { countryFlag, formatGrams, INTENDED_FOR, ROAST_LEVELS } from '@/modules/coffees/options'
 import { useCoffees } from '@/modules/coffees/useCoffees'
 import type { BagView } from '@/modules/coffees/balance'
+import RecipeCard from '@/components/recipes/RecipeCard.vue'
+import { useRecipes } from '@/modules/recipes/useRecipes'
 
 const route = useRoute()
 const router = useRouter()
 const { views, loaded } = useCoffees()
+const { recipes } = useRecipes()
+
+const coffeeRecipes = computed(() => recipes.value.filter((r) => r.coffee_id === route.params.id))
 
 const view = computed(() => views.value.find((v) => v.coffee.id === route.params.id) ?? null)
 const coffee = computed(() => view.value?.coffee ?? null)
@@ -257,6 +262,27 @@ async function remove(): Promise<void> {
                         />
                     </div>
                 </template>
+            </section>
+
+            <section class="animate-rise [animation-delay:180ms]">
+                <div class="mb-3 flex items-center justify-between">
+                    <h2 class="font-display font-soft text-xl font-semibold">Recipes</h2>
+                    <RouterLink
+                        :to="`/recipes/new?coffee=${coffee.id}`"
+                        class="pressable flex items-center gap-1 text-sm font-semibold text-accent"
+                    >
+                        <Plus class="size-4" /> New recipe
+                    </RouterLink>
+                </div>
+                <div v-if="coffeeRecipes.length" class="space-y-2">
+                    <RecipeCard v-for="recipe in coffeeRecipes" :key="recipe.id" :recipe="recipe" />
+                </div>
+                <p
+                    v-else
+                    class="rounded-card border border-dashed border-border p-4 text-sm text-text-muted"
+                >
+                    Dialled in a recipe for this coffee? Save it here.
+                </p>
             </section>
         </div>
 

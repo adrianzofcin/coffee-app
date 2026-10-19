@@ -51,6 +51,24 @@ const router = createRouter({
             meta: { layout: 'app', title: 'Recipes' },
         },
         {
+            path: '/recipes/new',
+            name: 'recipe-new',
+            component: () => import('@/pages/recipes/RecipeFormPage.vue'),
+            meta: { layout: 'sub', title: 'New recipe' },
+        },
+        {
+            path: '/recipes/:id',
+            name: 'recipe',
+            component: () => import('@/pages/recipes/RecipeDetailPage.vue'),
+            meta: { layout: 'sub', title: 'Recipe' },
+        },
+        {
+            path: '/recipes/:id/edit',
+            name: 'recipe-edit',
+            component: () => import('@/pages/recipes/RecipeFormPage.vue'),
+            meta: { layout: 'sub', title: 'Edit recipe' },
+        },
+        {
             path: '/brew',
             name: 'brew',
             component: () => import('@/pages/BrewPage.vue'),

@@ -9,6 +9,7 @@ import BagFields from '@/components/coffees/BagFields.vue'
 import CoffeeFields from '@/components/coffees/CoffeeFields.vue'
 import PhotoPicker from '@/components/coffees/PhotoPicker.vue'
 import { db } from '@/lib/db'
+import { scrollToFirstError } from '@/composables/scrollToError'
 import { addBag, createCoffee, updateCoffee } from '@/modules/coffees/actions'
 import { findSameCoffee, usedValues } from '@/modules/coffees/balance'
 import {
@@ -73,7 +74,8 @@ function validate(): boolean {
 }
 
 async function save(): Promise<void> {
-    if (!validate() || saving.value) return
+    if (saving.value) return
+    if (!validate()) return void scrollToFirstError('coffee-form')
 
     if (isEdit.value) {
         saving.value = true

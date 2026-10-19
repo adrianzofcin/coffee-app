@@ -60,7 +60,7 @@ const methods = [
                     <RouterLink
                         v-for="method in methods"
                         :key="method.key"
-                        to="/recipes"
+                        :to="`/recipes?method=${method.key}`"
                         class="pressable w-40 shrink-0 snap-start rounded-card border border-border/70 bg-surface p-4 shadow-[0_8px_20px_-14px_rgb(43_29_20/0.4)]"
                     >
                         <div class="relative mb-3 h-24 text-text">

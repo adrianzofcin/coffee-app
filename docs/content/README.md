@@ -14,7 +14,7 @@ Každý modul má vlastný súbor v tomto adresári s popisom obrazoviek, dátov
 | # | Modul | Popis | Súbor | Stav |
 |---|---|---|---|---|
 | 1 | Coffees | Evidencia balíčkov kávy, prehľad čo mám a koľko gramov ostáva | [coffees.md](coffees.md) | implementované |
-| 2 | Recipes | Pridanie a úprava receptov podľa metódy (Espresso, Hario V60, Cold Brew) | [recipes.md](recipes.md) | schválené |
+| 2 | Recipes | Pridanie a úprava receptov podľa metódy (Espresso, Hario V60, Cold Brew) | [recipes.md](recipes.md) | implementované |
 | 3 | Brew | Spustenie receptu, prechádzanie inštrukciami krok po kroku | [brew.md](brew.md) | schválené |
 | 4 | Stats | Základné štatistiky | [stats.md](stats.md) | plán, nízka priorita |
 

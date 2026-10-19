@@ -29,6 +29,9 @@
 | D21 | 2026-10-19 | Odobratie gramov alebo zníženie váhy zapečateného balíčka ho prepne na `open` | Odobratie kávy znamená, že je otvorený |
 | D22 | 2026-10-19 | Fotka dostane pri každej zmene nový názov súboru, staré súbory sa zatiaľ nemažú | Žiadna zastaraná cache. Upratovanie Storage sa rieši, ak to bude treba |
 | D23 | 2026-10-19 | Doména technických e-mailov `coffee.local`, repozitár `adrianzofcin/coffee-app` (URL `adrianzofcin.github.io/coffee-app/`) | Uzatvára Q3 a Q7 |
+| D24 | 2026-10-19 | Vzorové recepty vytvára databáza (`seed_recipes` pri novom používateľovi), nie appka | Žiadne duplikáty pri viacerých zariadeniach, menej logiky v klientovi |
+| D25 | 2026-10-19 | Poradie krokov receptu sa mení šípkami ↑ ↓, nie ťahaním | Drag & drop na mobile koliduje so scrollovaním |
+| D26 | 2026-10-19 | Nový recept začína šablónou krokov podľa metódy | Rýchlejšie vytvorenie, netreba začínať od nuly |
 
 ## Otvorené otázky a testy
 

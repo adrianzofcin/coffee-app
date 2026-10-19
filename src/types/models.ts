@@ -52,16 +52,54 @@ export interface BagAdjustment extends SyncedRecord {
     note: string | null
 }
 
+export type BrewMethod = 'espresso' | 'v60' | 'cold_brew'
+export type StepType = 'bloom' | 'pour' | 'wait' | 'stir' | 'swirl' | 'filter' | 'custom'
+export type SteepPlace = 'fridge' | 'room'
+
+export interface RecipeStep {
+    /** Client-side key for lists; starter recipes from the server come without one. */
+    id?: string
+    type: StepType
+    /** Seconds from the start of the timer; null = manual step (tap "Next"). */
+    at_s: number | null
+    /** Cumulative water on the scale, e.g. "pour to 150 g". */
+    target_water_g: number | null
+    text: string | null
+}
+
+export interface Recipe extends SyncedRecord {
+    name: string
+    method: BrewMethod
+    dose_g: number
+    water_g: number | null
+    yield_g: number | null
+    temperature_c: number | null
+    grind_setting: string | null
+    target_time_s: number | null
+    target_time_max_s: number | null
+    preinfusion_s: number | null
+    steep_time_min: number | null
+    steep_place: SteepPlace | null
+    /** Parts of water per part of concentrate when serving (1 = 1:1). */
+    dilution: number | null
+    steps: RecipeStep[]
+    coffee_id: string | null
+    is_favorite: boolean
+    notes: string | null
+    last_brewed_at: string | null
+}
+
 export interface SyncTables {
     coffees: Coffee
     bags: Bag
     bag_adjustments: BagAdjustment
+    recipes: Recipe
 }
 
 export type SyncTable = keyof SyncTables
 
 /** Push order matters: parents before children (foreign keys). */
-export const SYNC_TABLES: SyncTable[] = ['coffees', 'bags', 'bag_adjustments']
+export const SYNC_TABLES: SyncTable[] = ['coffees', 'bags', 'bag_adjustments', 'recipes']
 
 /** Fields the app sets itself on every write. */
 export type SystemField = keyof SyncedRecord
