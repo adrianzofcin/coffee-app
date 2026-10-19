@@ -7,6 +7,8 @@ interface BeforeInstallPromptEvent extends Event {
     userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+export type UpdateCheckResult = 'available' | 'up-to-date' | 'offline' | 'unavailable'
+
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000
 
 function detectIos(): boolean {
@@ -64,20 +66,23 @@ export const usePwaStore = defineStore('pwa', () => {
         installEvent.value = null
     }
 
-    /** Returns true when a new version is waiting to be applied. */
-    async function checkForUpdate(): Promise<boolean> {
-        if (!registration || !navigator.onLine) return needRefresh.value
+    async function checkForUpdate(): Promise<UpdateCheckResult> {
+        if (needRefresh.value) return 'available'
+        if (!navigator.onLine) return 'offline'
+        if (!registration) return 'unavailable'
 
         checking.value = true
         try {
             await registration.update()
         } catch {
-            // Offline or the site is unpublished: keep running the cached version.
+            // sw.js is not served (site unpublished) or the network failed;
+            // the cached version keeps running either way.
+            return navigator.onLine ? 'unavailable' : 'offline'
         } finally {
             checking.value = false
         }
 
-        return needRefresh.value
+        return needRefresh.value ? 'available' : 'up-to-date'
     }
 
     function applyUpdate(): Promise<void> {

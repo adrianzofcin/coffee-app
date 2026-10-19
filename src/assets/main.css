@@ -130,6 +130,8 @@
         -webkit-tap-highlight-color: transparent;
         -webkit-text-size-adjust: 100%;
         overscroll-behavior-y: none;
+        /* No double-tap zoom: the app behaves like a native one. */
+        touch-action: manipulation;
     }
 
     body {

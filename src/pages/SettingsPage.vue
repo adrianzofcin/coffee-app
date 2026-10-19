@@ -7,7 +7,7 @@ import AppButton from '@/components/ui/AppButton.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import InstallHint from '@/components/InstallHint.vue'
 import { useAuthStore } from '@/stores/auth'
-import { usePwaStore } from '@/stores/pwa'
+import { usePwaStore, type UpdateCheckResult } from '@/stores/pwa'
 import { useThemeStore, type ThemeMode } from '@/stores/theme'
 
 const auth = useAuthStore()
@@ -26,12 +26,17 @@ const themeIndex = computed(() => themeOptions.findIndex((o) => o.value === them
 
 const confirmLogout = ref(false)
 const loggingOut = ref(false)
-const updateStatus = ref<string | null>(null)
+const updateStatuses: Record<UpdateCheckResult, { text: string; tone: string } | null> = {
+    available: null,
+    'up-to-date': { text: 'Up to date', tone: 'text-success' },
+    offline: { text: 'Offline', tone: 'text-text-muted' },
+    unavailable: { text: 'Not published', tone: 'text-text-muted' },
+}
+const updateStatus = ref<{ text: string; tone: string } | null>(null)
 
 async function checkForUpdate(): Promise<void> {
     updateStatus.value = null
-    const available = await pwa.checkForUpdate()
-    updateStatus.value = available ? null : navigator.onLine ? 'Up to date' : 'Offline'
+    updateStatus.value = updateStatuses[await pwa.checkForUpdate()]
 }
 
 async function logout(): Promise<void> {
@@ -131,8 +136,8 @@ async function logout(): Promise<void> {
                                 />
                             </span>
                             <span class="flex-1 font-medium">Check for updates</span>
-                            <span v-if="updateStatus" class="text-sm text-success">{{
-                                updateStatus
+                            <span v-if="updateStatus" class="text-sm" :class="updateStatus.tone">{{
+                                updateStatus.text
                             }}</span>
                             <ChevronRight v-else class="size-5 text-text-muted" />
                         </button>
