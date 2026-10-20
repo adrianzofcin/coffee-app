@@ -41,15 +41,21 @@ function tone(frequency: number, duration: number, volume: number, delay = 0): v
     oscillator.stop(start + duration + 0.02)
 }
 
+/** Browsers refuse to vibrate (and log an error) before the first tap on the page. */
+function vibrate(pattern: number | number[]): void {
+    if (navigator.userActivation?.hasBeenActive === false) return
+    navigator.vibrate?.(pattern)
+}
+
 /** Short tick a few seconds before the next step. */
 export function playTick(): void {
     tone(880, 0.12, 0.25)
-    navigator.vibrate?.(40)
+    vibrate(40)
 }
 
 /** Clear two-tone chime when the step changes. */
 export function playChange(): void {
     tone(660, 0.18, 0.4)
     tone(990, 0.3, 0.4, 0.18)
-    navigator.vibrate?.([120, 60, 120])
+    vibrate([120, 60, 120])
 }
