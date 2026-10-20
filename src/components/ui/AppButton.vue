@@ -24,7 +24,7 @@ const variants = {
     <button
         :type="type"
         :disabled="disabled || loading"
-        class="pressable inline-flex min-h-13 items-center justify-center gap-2 rounded-control px-5 text-base font-semibold disabled:opacity-45 disabled:shadow-none"
+        class="pressable inline-flex min-h-13 items-center justify-center gap-2 rounded-control px-5 text-base font-semibold disabled:opacity-45 disabled:shadow-none [&>svg]:shrink-0"
         :class="[variants[variant], { 'w-full': block }]"
     >
         <LoaderCircle v-if="loading" class="size-5 animate-spin" />
