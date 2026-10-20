@@ -6,13 +6,14 @@ import { buildCoffeeViews, type CoffeeView } from './balance'
 /** All coffees with their bags and remaining grams, live from the local database. */
 export function useCoffees() {
     const data = useLiveQuery(async () => {
-        const [coffees, bags, adjustments] = await Promise.all([
+        const [coffees, bags, adjustments, brews] = await Promise.all([
             db.coffees.toArray(),
             db.bags.toArray(),
             db.bag_adjustments.toArray(),
+            db.brews.toArray(),
         ])
 
-        return { coffees, views: buildCoffeeViews(coffees, bags, adjustments) }
+        return { coffees, bags, views: buildCoffeeViews(coffees, bags, adjustments, brews) }
     }, null)
 
     return {
@@ -20,5 +21,7 @@ export function useCoffees() {
         views: computed<CoffeeView[]>(() => data.value?.views ?? []),
         /** Raw rows, incl. deleted ones, for suggestions and duplicate checks. */
         coffees: computed(() => data.value?.coffees ?? []),
+        /** Raw bags, incl. deleted ones, so history can still name the coffee. */
+        bags: computed(() => data.value?.bags ?? []),
     }
 }

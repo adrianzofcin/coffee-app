@@ -1,4 +1,4 @@
-import type { Bag, BagAdjustment, Coffee } from '@/types/models'
+import type { Bag, BagAdjustment, Brew, Coffee } from '@/types/models'
 
 /** Below this many grams the app offers to mark a bag as finished. */
 export const LOW_REMAINING_G = 5
@@ -46,6 +46,18 @@ export function bagRemaining(bag: Bag, adjustments: BagAdjustment[], brewDoses =
     return Math.max(0, bag.weight_g - brewDoses + delta)
 }
 
+/** Grams brewed from each bag; every non-deleted brew counts, a steeping cold brew too. */
+export function brewDosesByBag(brews: Brew[]): Map<string, number> {
+    const doses = new Map<string, number>()
+
+    for (const brew of brews) {
+        if (brew.deleted_at || !brew.bag_id) continue
+        doses.set(brew.bag_id, (doses.get(brew.bag_id) ?? 0) + Number(brew.dose_g))
+    }
+
+    return doses
+}
+
 export function isActiveBag(bag: Bag): boolean {
     return bag.status !== 'finished'
 }
@@ -54,14 +66,16 @@ export function buildCoffeeViews(
     coffees: Coffee[],
     bags: Bag[],
     adjustments: BagAdjustment[],
+    brews: Brew[] = [],
     today = localDate(),
 ): CoffeeView[] {
     const bagsByCoffee = new Map<string, BagView[]>()
+    const doses = brewDosesByBag(brews)
 
     for (const bag of bags) {
         if (bag.deleted_at) continue
 
-        const remaining = bagRemaining(bag, adjustments)
+        const remaining = bagRemaining(bag, adjustments, doses.get(bag.id) ?? 0)
         const view: BagView = {
             bag,
             remaining,

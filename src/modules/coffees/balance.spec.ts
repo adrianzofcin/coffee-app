@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { Bag, BagAdjustment, Coffee } from '@/types/models'
+import type { Bag, BagAdjustment, Brew, Coffee } from '@/types/models'
 import {
     bagRemaining,
+    brewDosesByBag,
     buildCoffeeViews,
     daysBetween,
     findSameCoffee,
@@ -69,6 +70,30 @@ function adjustment(
     }
 }
 
+function brew(id: string, bagId: string | null, dose: number, patch: Partial<Brew> = {}): Brew {
+    return {
+        ...base,
+        id,
+        recipe_id: null,
+        bag_id: bagId,
+        method: 'v60',
+        source: 'quick_log',
+        status: 'completed',
+        started_at: '2026-10-10T08:00:00Z',
+        finished_at: null,
+        steep_ends_at: null,
+        dose_g: dose,
+        water_g: null,
+        yield_g: null,
+        brew_time_s: null,
+        rating: null,
+        taste_tags: [],
+        notes: null,
+        recipe_snapshot: null,
+        ...patch,
+    }
+}
+
 describe('bagRemaining', () => {
     it('subtracts brews and applies adjustments', () => {
         const b = bag('b1', 'c1')
@@ -97,6 +122,7 @@ describe('buildCoffeeViews', () => {
             bag('b4', 'c1', { deleted_at: 'x' }),
         ],
         [adjustment('b2', -50)],
+        [brew('w1', 'b2', 15), brew('w2', 'b2', 100, { deleted_at: 'x' }), brew('w3', null, 18)],
         '2026-10-11',
     )
 
@@ -106,7 +132,7 @@ describe('buildCoffeeViews', () => {
     })
 
     it('sums active bags and picks the open bag for freshness', () => {
-        expect(views[0]!.remaining).toBe(450)
+        expect(views[0]!.remaining).toBe(435)
         expect(views[0]!.currentBag?.bag.id).toBe('b2')
         expect(views[0]!.currentBag?.daysSinceRoast).toBe(21)
     })
@@ -114,6 +140,20 @@ describe('buildCoffeeViews', () => {
     it('treats coffees with only finished bags as archived', () => {
         expect(views[1]!.isActive).toBe(false)
         expect(views[1]!.finishedBags).toHaveLength(1)
+    })
+})
+
+describe('brewDosesByBag', () => {
+    it('sums doses per bag, steeping brews included, deleted and bagless ones skipped', () => {
+        const doses = brewDosesByBag([
+            brew('a', 'b1', 15),
+            brew('b', 'b1', '18.5' as unknown as number),
+            brew('c', 'b1', 100, { status: 'steeping' }),
+            brew('d', 'b1', 50, { deleted_at: 'x' }),
+            brew('e', null, 20),
+        ])
+        expect(doses.get('b1')).toBe(133.5)
+        expect(doses.size).toBe(1)
     })
 })
 

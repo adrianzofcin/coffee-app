@@ -89,17 +89,60 @@ export interface Recipe extends SyncedRecord {
     last_brewed_at: string | null
 }
 
+/** Recipe parameters copied into a brew, after scaling to the brew's dose. */
+export type RecipeSnapshot = Pick<
+    Recipe,
+    | 'name'
+    | 'method'
+    | 'dose_g'
+    | 'water_g'
+    | 'yield_g'
+    | 'temperature_c'
+    | 'grind_setting'
+    | 'target_time_s'
+    | 'target_time_max_s'
+    | 'preinfusion_s'
+    | 'steep_time_min'
+    | 'steep_place'
+    | 'dilution'
+    | 'steps'
+>
+
+export type BrewSource = 'recipe' | 'quick_log'
+export type BrewStatus = 'steeping' | 'completed'
+
+export interface Brew extends SyncedRecord {
+    recipe_id: string | null
+    /** null = brewed without picking a coffee, nothing is deducted. */
+    bag_id: string | null
+    method: BrewMethod
+    source: BrewSource
+    status: BrewStatus
+    started_at: string
+    finished_at: string | null
+    steep_ends_at: string | null
+    dose_g: number
+    water_g: number | null
+    yield_g: number | null
+    brew_time_s: number | null
+    rating: number | null
+    taste_tags: string[]
+    notes: string | null
+    recipe_snapshot: RecipeSnapshot | null
+}
+
 export interface SyncTables {
     coffees: Coffee
     bags: Bag
     bag_adjustments: BagAdjustment
     recipes: Recipe
+    brews: Brew
 }
 
 export type SyncTable = keyof SyncTables
 
 /** Push order matters: parents before children (foreign keys). */
-export const SYNC_TABLES: SyncTable[] = ['coffees', 'bags', 'bag_adjustments', 'recipes']
+export const SYNC_TABLES: SyncTable[] = ['coffees', 'bags', 'bag_adjustments', 'recipes', 'brews']
 
 /** Fields the app sets itself on every write. */
 export type SystemField = keyof SyncedRecord

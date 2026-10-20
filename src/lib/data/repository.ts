@@ -96,7 +96,7 @@ export function softDelete(table: SyncTable, id: string): Promise<void> {
 export async function batchWrite(work: () => Promise<void>): Promise<void> {
     await db.transaction(
         'rw',
-        [db.coffees, db.bags, db.bag_adjustments, db.recipes, db.outbox, db.photos],
+        [db.coffees, db.bags, db.bag_adjustments, db.recipes, db.brews, db.outbox, db.photos],
         work,
     )
 }
