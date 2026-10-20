@@ -23,6 +23,7 @@ export async function startRun(recipe: Recipe, bagId: string | null, dose: numbe
         paused_at: null,
         paused_total_ms: 0,
         step_index: 0,
+        step_started_s: 0,
         stopped_at: null,
     })
 }

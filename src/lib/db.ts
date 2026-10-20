@@ -51,6 +51,8 @@ export interface ActiveRun {
     paused_total_ms: number
     /** Step the user moved to with Next / Skip; timed steps advance on their own from here. */
     step_index: number
+    /** Pour-over: elapsed seconds when the user moved to `step_index`. Missing on older runs. */
+    step_started_s?: number
     /** Timer stopped (Finish / Stop), waiting for the result to be logged. */
     stopped_at: number | null
 }

@@ -6,6 +6,7 @@ import MethodArt from '@/components/recipes/MethodArt.vue'
 import StarRating from '@/components/ui/StarRating.vue'
 import { brewTitle } from '@/modules/brews/brew'
 import { formatBrewDate } from '@/modules/brews/format'
+import { brewTargetS, formatDelta, timeVerdict } from '@/modules/brews/pourover'
 import { tasteLabel } from '@/modules/brews/options'
 import type { Brew } from '@/types/models'
 
@@ -14,6 +15,13 @@ const props = defineProps<{ brew: Brew; coffeeName?: string | null }>()
 const details = computed(() =>
     [props.coffeeName, `${Number(props.brew.dose_g)} g`].filter(Boolean).join(' · '),
 )
+
+/** Pour-over off the recipe time: "+0:18" */
+const offTime = computed(() => {
+    const verdict = timeVerdict(props.brew.brew_time_s, brewTargetS(props.brew.recipe_snapshot))
+
+    return verdict && verdict.tone !== 'on' ? formatDelta(verdict.delta) : null
+})
 </script>
 
 <template>
@@ -32,6 +40,7 @@ const details = computed(() =>
             <p class="truncate text-sm text-text-muted">{{ details }}</p>
             <p class="tabular mt-0.5 text-xs text-text-muted">
                 {{ formatBrewDate(brew.started_at) }}
+                <span v-if="offTime" class="font-semibold text-warning"> · {{ offTime }}</span>
             </p>
         </div>
 

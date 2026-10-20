@@ -2,7 +2,7 @@ import type { ActiveRun } from '@/lib/db'
 import type { RecipeStep } from '@/types/models'
 
 type RunTiming = Pick<ActiveRun, 'started_at' | 'paused_at' | 'paused_total_ms' | 'stopped_at'>
-type TimingChange = Partial<RunTiming & Pick<ActiveRun, 'step_index'>>
+type TimingChange = Partial<RunTiming & Pick<ActiveRun, 'step_index' | 'step_started_s'>>
 
 /**
  * Elapsed time is derived from the start time, not counted tick by tick,
@@ -21,7 +21,14 @@ export function isRunning(run: RunTiming): boolean {
 }
 
 export function startTimer(now: number): TimingChange {
-    return { started_at: now, paused_at: null, paused_total_ms: 0, stopped_at: null, step_index: 0 }
+    return {
+        started_at: now,
+        paused_at: null,
+        paused_total_ms: 0,
+        stopped_at: null,
+        step_index: 0,
+        step_started_s: 0,
+    }
 }
 
 export function pauseTimer(run: RunTiming, now: number): TimingChange {
@@ -48,6 +55,7 @@ export function resetTimer(): TimingChange {
         paused_total_ms: 0,
         stopped_at: null,
         step_index: 0,
+        step_started_s: 0,
     }
 }
 

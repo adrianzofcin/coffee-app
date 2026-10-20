@@ -12,6 +12,7 @@ import StepTimeline from '@/components/recipes/StepTimeline.vue'
 import { deleteBrew, rateBrew } from '@/modules/brews/actions'
 import { brewTitle } from '@/modules/brews/brew'
 import { formatBrewDate } from '@/modules/brews/format'
+import { brewTargetS, timeVerdict } from '@/modules/brews/pourover'
 import { tasteLabel } from '@/modules/brews/options'
 import { useBrews, useShelf } from '@/modules/brews/useBrews'
 import { methodLabel } from '@/modules/recipes/options'
@@ -35,6 +36,15 @@ watch([loaded, brew], ([isLoaded, current]) => {
 const rating = computed({
     get: () => brew.value?.rating ?? null,
     set: (value) => brew.value && void rateBrew(brew.value.id, value),
+})
+
+/** Pour-over: how the brew time compares with the recipe. */
+const verdict = computed(() => {
+    const b = brew.value
+    const target = b ? brewTargetS(b.recipe_snapshot) : null
+    const result = b ? timeVerdict(b.brew_time_s, target) : null
+
+    return result && { ...result, target: formatSeconds(target!) }
 })
 
 const params = computed(() => {
@@ -161,6 +171,13 @@ async function remove(): Promise<void> {
                     <dd class="tabular truncate font-semibold">{{ param.value }}</dd>
                 </div>
             </dl>
+            <p
+                v-if="verdict"
+                class="tabular -mt-3 px-1 text-sm"
+                :class="verdict.tone === 'on' ? 'text-success' : 'text-warning'"
+            >
+                {{ verdict.label }} ({{ verdict.target }})
+            </p>
 
             <section v-if="brew.notes" class="animate-rise [animation-delay:60ms]">
                 <h2

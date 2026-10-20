@@ -11,6 +11,7 @@ import type {
     RecipeStep,
 } from '@/types/models'
 import { RATE_WINDOW_MS } from './options'
+import { isPourOver, pourOverSteps } from '@/modules/recipes/steps'
 
 /** The recipe as brewed this time: scaled to the dose, without list-only step keys. */
 export function snapshotFromRecipe(recipe: Recipe, dose: number): RecipeSnapshot {
@@ -28,12 +29,15 @@ export function snapshotFromRecipe(recipe: Recipe, dose: number): RecipeSnapshot
         steep_time_min: recipe.steep_time_min,
         steep_place: recipe.steep_place,
         dilution: recipe.dilution === null ? null : Number(recipe.dilution),
-        steps: recipe.steps.map(({ type, at_s, target_water_g, text }) => ({
-            type,
-            at_s,
-            target_water_g,
-            text,
-        })),
+        steps: (isPourOver(recipe.method) ? pourOverSteps(recipe.steps) : recipe.steps).map(
+            ({ type, at_s, duration_s, target_water_g, text }) => ({
+                type,
+                at_s,
+                ...(duration_s !== undefined && { duration_s }),
+                target_water_g,
+                text,
+            }),
+        ),
     }
 
     return dose === snapshot.dose_g ? snapshot : scaleRecipe(snapshot, dose)

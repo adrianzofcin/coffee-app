@@ -17,6 +17,7 @@ import {
 import AppButton from '@/components/ui/AppButton.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import LowBagSheet from '@/components/brews/LowBagSheet.vue'
+import PourOverStage from '@/components/brews/PourOverStage.vue'
 import ShotGauge from '@/components/brews/ShotGauge.vue'
 import MethodArt from '@/components/recipes/MethodArt.vue'
 import { useNow } from '@/composables/useNow'
@@ -30,6 +31,15 @@ import {
     type LowBag,
 } from '@/modules/brews/actions'
 import { coldBrewPhases } from '@/modules/brews/brew'
+import {
+    drainRate,
+    drainTick,
+    estimateDrain,
+    formatDelta,
+    pourState,
+    targetEndS,
+    type Drain,
+} from '@/modules/brews/pourover'
 import {
     elapsedMs,
     formatTimer,
@@ -45,6 +55,7 @@ import {
 import { useActiveRun } from '@/modules/brews/useBrews'
 import { STEEP_PLACES, STEP_TYPES, stepTitle } from '@/modules/recipes/options'
 import { formatMinutes, formatSeconds } from '@/modules/recipes/recipe'
+import { isPourOver, pourOverSteps, stepsEndS } from '@/modules/recipes/steps'
 import { usePreferencesStore } from '@/stores/preferences'
 import type { RecipeStep } from '@/types/models'
 
@@ -71,14 +82,16 @@ const running = computed(() => (run.value ? isRunning(run.value) : false))
 const paused = computed(() => run.value?.paused_at != null)
 const stopped = computed(() => run.value?.stopped_at != null)
 const elapsed = computed(() => (run.value ? elapsedMs(run.value, now.value) : 0))
+const elapsedS = computed(() => elapsed.value / 1000)
+const pourOver = computed(() => isPourOver(method.value))
 
 /** Cold brew: only the steps before steeping happen here. */
 const steps = computed<RecipeStep[]>(() => {
     if (!snapshot.value) return []
 
-    return method.value === 'cold_brew'
-        ? coldBrewPhases(snapshot.value.steps).before
-        : snapshot.value.steps
+    if (method.value === 'cold_brew') return coldBrewPhases(snapshot.value.steps).before
+
+    return pourOver.value ? pourOverSteps(snapshot.value.steps) : snapshot.value.steps
 })
 
 const state = computed(() =>
@@ -96,9 +109,93 @@ const overdue = computed(
     () => state.value.isLast && total.value !== null && elapsed.value / 1000 >= total.value,
 )
 
+// Pour-over: steps follow one another from the step the user last moved to.
+const pour = computed(() =>
+    pourState(
+        steps.value,
+        run.value?.step_index ?? 0,
+        run.value?.step_started_s ?? 0,
+        elapsedS.value,
+    ),
+)
+const target = computed(() => targetEndS(steps.value, snapshot.value?.target_time_s ?? null))
+const drawdown = computed(() => started.value && pour.value.phase === 'drawdown')
+/** Seconds past (positive) or before (negative) the recipe's total time. */
+const overBy = computed(() => (target.value === null ? null : elapsedS.value - target.value))
+const nextPour = computed(() =>
+    steps.value.slice(pour.value.index + 1).find((step) => step.target_water_g !== null),
+)
+
+/** Step bar: each step as long as it lasts, the drawdown up to the target time at the end. */
+const segments = computed(() => {
+    const p = pour.value
+    const list = steps.value.map((step, index) => {
+        const length = step.duration_s ?? 10
+        let fill = index < p.index ? 1 : 0
+        if (index === p.index) {
+            fill =
+                p.phase === 'drawdown' || !started.value
+                    ? Number(p.phase === 'drawdown')
+                    : step.duration_s
+                      ? Math.min(1, (elapsedS.value - p.startS) / step.duration_s)
+                      : 0.5
+        }
+
+        return { length, fill, current: index === p.index && p.phase === 'step' }
+    })
+    const end = stepsEndS(steps.value)
+    if (target.value !== null && end !== null && target.value > end) {
+        const fill = drawdown.value
+            ? Math.min(1, (elapsedS.value - (p.endS ?? 0)) / (target.value - end))
+            : 0
+        list.push({ length: target.value - end, fill, current: drawdown.value })
+    }
+
+    return list
+})
+
+// Dripper picture: water in the cone and coffee in the server, simulated tick by tick.
+const totalWater = computed(
+    () =>
+        snapshot.value?.water_g ??
+        Math.max(0, ...steps.value.map((step) => step.target_water_g ?? 0)),
+)
+const pouredG = computed(() => (started.value ? pour.value.expectedG : 0))
+const drain = ref<Drain>({ inDripperG: 0, servedG: 0 })
+let lastTick = { elapsedS: 0, pouredG: 0 }
+
+watch([elapsedS, pouredG], ([seconds, poured]) => {
+    const rate = drainRate(totalWater.value, target.value)
+    const dt = seconds - lastTick.elapsedS
+
+    drain.value =
+        dt < 0 || dt > 3
+            ? estimateDrain(poured, seconds, rate)
+            : drainTick(drain.value, poured - lastTick.pouredG, dt, rate)
+    lastTick = { elapsedS: seconds, pouredG: poured }
+})
+
+const stage = computed(() => {
+    const p = pour.value
+    const step = p.phase === 'step' && started.value ? p.step : null
+    const previous = steps.value[p.index - 1]
+    const capacity = Math.max(120, totalWater.value * 0.55)
+
+    return {
+        rate: running.value && p.pour ? p.pour.rate : null,
+        level: drain.value.inDripperG / capacity,
+        served: totalWater.value ? drain.value.servedG / (totalWater.value * 0.92) : 0,
+        wet: pouredG.value > 0,
+        bubbling: step?.type === 'bloom' || (step?.type === 'wait' && previous?.type === 'bloom'),
+        swirling: running.value && (step?.type === 'swirl' || step?.type === 'stir'),
+        dripping: drain.value.inDripperG > 0.5,
+        paused: !running.value,
+    }
+})
+
 const typeLabel = (step: RecipeStep) => STEP_TYPES.find((t) => t.value === step.type)?.label ?? ''
 const title = (step: RecipeStep) =>
-    step.type === 'custom' && step.text && step.target_water_g === null
+    (step.type === 'custom' || step.type === 'wait') && step.text && step.target_water_g === null
         ? step.text
         : stepTitle(step)
 const detail = (step: RecipeStep) => (title(step) === step.text ? null : step.text)
@@ -120,7 +217,7 @@ watch(
     () => state.value.index,
     (index, previous) => {
         const step = steps.value[index]
-        if (!running.value || index <= previous || step?.at_s == null) return
+        if (pourOver.value || !running.value || index <= previous || step?.at_s == null) return
 
         // Back from the background several steps later: jump silently.
         if (elapsed.value / 1000 - step.at_s < 1.5) signalChange()
@@ -128,7 +225,25 @@ watch(
 )
 
 watch(
-    () => (state.value.secondsToNext === null ? null : Math.ceil(state.value.secondsToNext)),
+    () => pour.value.index * 2 + Number(pour.value.phase === 'drawdown'),
+    (key, previous) => {
+        if (!pourOver.value || !running.value || key <= previous) return
+
+        // Back from the background several steps later: jump silently.
+        const startedS = pour.value.phase === 'drawdown' ? pour.value.endS! : pour.value.startS
+        if (elapsedS.value - startedS < 1.5) signalChange()
+    },
+)
+
+watch(
+    () => {
+        const seconds = pourOver.value
+            ? pour.value.phase === 'step'
+                ? pour.value.secondsLeft
+                : null
+            : state.value.secondsToNext
+        return seconds === null ? null : Math.ceil(seconds)
+    },
     (seconds, previous) => {
         if (running.value && seconds === 3 && previous === 4 && preferences.sounds) playTick()
     },
@@ -146,6 +261,13 @@ function togglePause(): void {
 
 /** Next / Skip: move past the step on screen. */
 function next(): void {
+    if (pourOver.value) {
+        if (pour.value.isLast) return void finish()
+        return void patchRun({
+            step_index: pour.value.index + 1,
+            step_started_s: elapsedS.value,
+        })
+    }
     if (state.value.isLast) return void finish()
     void patchRun({ step_index: state.value.index + 1 })
 }
@@ -239,7 +361,7 @@ const steepInfo = computed(() => {
                 </button>
             </div>
             <div
-                v-if="total && method !== 'cold_brew'"
+                v-if="total && method === 'espresso'"
                 class="mx-5 h-1 overflow-hidden rounded-full bg-cream/10"
             >
                 <div
@@ -342,7 +464,179 @@ const steepInfo = computed(() => {
             </div>
         </main>
 
-        <!-- V60 and other step-by-step recipes -->
+        <!-- V60: what to pour and how fast, over a picture of the dripper -->
+        <main v-else-if="pourOver" class="flex flex-1 flex-col px-5 pt-3">
+            <div class="flex items-baseline justify-between gap-3">
+                <p
+                    class="tabular font-display text-[34px] leading-none font-semibold"
+                    :class="[
+                        paused ? 'animate-pulse text-cream/60' : '',
+                        drawdown && overBy !== null && overBy > 0 ? 'text-warning' : '',
+                    ]"
+                >
+                    {{ formatTimer(elapsed) }}
+                    <span v-if="target" class="text-base font-normal text-cream/50"
+                        >/ {{ formatSeconds(target) }}</span
+                    >
+                </p>
+                <p
+                    v-if="pour.step"
+                    class="truncate text-xs font-semibold tracking-[0.14em] text-accent uppercase"
+                >
+                    <template v-if="drawdown">Drawdown</template>
+                    <template v-else
+                        >Step {{ pour.index + 1 }}/{{ steps.length }} ·
+                        {{ typeLabel(pour.step) }}</template
+                    >
+                </p>
+            </div>
+
+            <PourOverStage
+                class="mx-auto mt-1 min-h-0 w-full max-w-[21rem] flex-1 basis-0"
+                v-bind="stage"
+            />
+
+            <section class="mt-2 min-h-[8.5rem] text-center" aria-live="polite">
+                <template v-if="!started">
+                    <p class="font-display font-soft text-[30px] leading-tight font-semibold">
+                        {{ pour.step ? title(pour.step) : 'Ready' }}
+                    </p>
+                    <p v-if="pour.pour" class="tabular mt-1 text-cream/70">
+                        {{ Math.round(pour.pour.toG - pour.pour.fromG) }} g in
+                        {{ pour.step?.duration_s }} s ·
+                        <strong class="text-cream"
+                            >{{ Math.round(pour.pour.rate * 10) / 10 }} g/s</strong
+                        >
+                    </p>
+                    <p class="mt-1 text-sm text-cream/60">Start when the kettle is ready.</p>
+                </template>
+
+                <template v-else-if="drawdown">
+                    <p class="font-display font-soft text-[34px] leading-tight font-semibold">
+                        Let it drain
+                    </p>
+                    <p v-if="overBy === null" class="mt-1 text-cream/70">
+                        Finish when the water is through.
+                    </p>
+                    <p v-else-if="overBy < 0" class="tabular mt-1 text-cream/70">
+                        Should be through by {{ formatSeconds(target!) }} ·
+                        <strong class="text-cream">{{ formatSeconds(Math.ceil(-overBy)) }}</strong>
+                        left
+                    </p>
+                    <p v-else class="tabular mt-1 font-semibold text-warning">
+                        {{ formatDelta(overBy) }} over the recipe
+                    </p>
+                </template>
+
+                <template v-else-if="pour.pour">
+                    <p class="tabular font-display text-[64px] leading-none font-semibold">
+                        {{ Math.round(pour.expectedG)
+                        }}<span class="text-2xl font-normal text-cream/60"> g</span>
+                    </p>
+                    <p class="tabular mt-2 text-cream/75">
+                        <strong class="text-accent"
+                            >{{ Math.round(pour.pour.rate * 10) / 10 }} g/s</strong
+                        >
+                        · to {{ Math.round(pour.pour.toG) }} g ·
+                        {{ formatSeconds(Math.ceil(pour.secondsLeft ?? 0)) }} left
+                    </p>
+                    <p v-if="detail(pour.step!)" class="mt-1 text-sm text-cream/60">
+                        {{ detail(pour.step!) }}
+                    </p>
+                </template>
+
+                <template v-else-if="pour.step">
+                    <p class="font-display font-soft text-[34px] leading-tight font-semibold">
+                        {{ title(pour.step) }}
+                    </p>
+                    <p v-if="detail(pour.step)" class="text-sm text-cream/60">
+                        {{ detail(pour.step) }}
+                    </p>
+                    <p v-if="pour.secondsLeft === null" class="mt-1 text-cream/70">
+                        Tap Next when done
+                    </p>
+                    <p v-else-if="nextPour" class="tabular mt-1 text-cream/70">
+                        {{ nextPour.type === 'bloom' ? 'Bloom' : 'Next pour' }} in
+                        <strong class="text-cream">{{
+                            formatSeconds(Math.ceil(pour.secondsLeft))
+                        }}</strong>
+                        → {{ nextPour.target_water_g }} g
+                    </p>
+                    <p v-else-if="pour.next" class="tabular mt-1 text-cream/70">
+                        Next: {{ title(pour.next) }} in
+                        <strong class="text-cream">{{
+                            formatSeconds(Math.ceil(pour.secondsLeft))
+                        }}</strong>
+                    </p>
+                    <p v-else class="tabular mt-1 text-cream/70">
+                        Drawdown in
+                        <strong class="text-cream">{{
+                            formatSeconds(Math.ceil(pour.secondsLeft))
+                        }}</strong>
+                    </p>
+                </template>
+            </section>
+
+            <div class="mt-3 flex gap-1" aria-hidden="true">
+                <div
+                    v-for="(segment, index) in segments"
+                    :key="index"
+                    class="h-1.5 overflow-hidden rounded-full bg-cream/12"
+                    :class="segment.current ? 'ring-1 ring-accent/60' : ''"
+                    :style="{ flex: `${segment.length} 1 0` }"
+                >
+                    <div
+                        class="h-full rounded-full bg-accent transition-[width] duration-200"
+                        :style="{ width: `${segment.fill * 100}%` }"
+                    />
+                </div>
+            </div>
+
+            <p
+                v-if="!wakeLockSupported"
+                class="mt-3 flex items-center gap-2 px-1 text-sm text-cream/60"
+            >
+                <SunMedium class="size-4 shrink-0" /> Keep the screen on while brewing.
+            </p>
+
+            <div class="pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+                <AppButton v-if="!started" block @click="start">
+                    <Play class="size-5 fill-current" /> Start
+                </AppButton>
+                <AppButton v-else-if="stopped" block @click="router.push('/brew/finish')"
+                    >Log this brew</AppButton
+                >
+                <div v-else class="grid grid-cols-3 gap-2">
+                    <AppButton
+                        variant="secondary"
+                        class="!bg-cream/12 !px-2 !text-cream"
+                        @click="togglePause"
+                    >
+                        <Play v-if="paused" class="size-5 fill-current" />
+                        <Pause v-else class="size-5" />
+                        {{ paused ? 'Resume' : 'Pause' }}
+                    </AppButton>
+                    <AppButton
+                        variant="secondary"
+                        class="!bg-cream/12 !px-2 !text-cream"
+                        :disabled="!pour.step || pour.isLast"
+                        @click="next"
+                    >
+                        <SkipForward class="size-5" />
+                        {{ pour.secondsLeft === null ? 'Next' : 'Skip' }}
+                    </AppButton>
+                    <AppButton
+                        :variant="drawdown ? 'primary' : 'secondary'"
+                        :class="drawdown ? '!px-2' : '!bg-cream/12 !px-2 !text-cream'"
+                        @click="finish"
+                    >
+                        <Check class="size-5" /> {{ drawdown ? 'Done' : 'Finish' }}
+                    </AppButton>
+                </div>
+            </div>
+        </main>
+
+        <!-- Other step-by-step recipes -->
         <main v-else class="flex flex-1 flex-col px-5 pt-8">
             <p
                 class="tabular font-display text-center text-[88px] leading-none font-semibold"

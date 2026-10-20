@@ -8,7 +8,12 @@ import type { BrewFormState } from '@/modules/brews/form'
 
 const form = defineModel<BrewFormState>({ required: true })
 
-const props = defineProps<{ errors: FormErrors<BrewFormState>; focusYield?: boolean }>()
+const props = defineProps<{
+    errors: FormErrors<BrewFormState>
+    focusYield?: boolean
+    /** Under the time, e.g. how it compares with the recipe. */
+    timeHint?: string | null
+}>()
 
 const yieldField = ref<HTMLElement | null>(null)
 
@@ -52,6 +57,7 @@ onMounted(() => {
                 inputmode="numeric"
                 placeholder="m:ss"
                 :error="errors.time"
+                :hint="timeHint"
             />
         </div>
 

@@ -44,6 +44,7 @@ Tabuľka `active_run` v Dexie (najviac jeden záznam s `id = current`). Umožňu
 | `paused_at` | Čas pozastavenia (`null` = beží) |
 | `paused_total_ms` | Súčet doterajších pauz |
 | `step_index` | Krok, na ktorý sa prešlo cez Next / Skip. Časované kroky od neho pokračujú podľa času |
+| `step_started_s` | V60: sekunda prípravy, kedy sa prešlo na `step_index`. Ďalšie kroky sa počítajú od nej, takže preskočené čakanie posunie všetky ďalšie kroky skôr |
 | `stopped_at` | Stopky zastavené (Finish / Stop), čaká sa na zápis výsledku |
 
 **Uplynulý čas** = `(stopped_at ?? paused_at ?? now) − started_at − paused_total_ms`. Stopky sa počítajú z času štartu, nie z počítadla sekúnd, takže zatvorenie appky ani uspanie telefónu ich nerozbije.
@@ -82,18 +83,28 @@ Tabuľka `active_run` v Dexie (najviac jeden záznam s `id = current`). Umožňu
 | Súhrn | Voda / výťažok, pomer, teplota, mletie (ako pripomienka) |
 | **Start** | Uloží `active_run` a otvorí Brew run. Ak už beží iná príprava, appka sa opýta, či ju nahradiť, alebo v nej pokračovať |
 
-### 3. Brew run: V60 a ostatné recepty s krokmi (`/brew/run`)
+### 3. Brew run: V60 (`/brew/run`)
 
-- Stopky sa spustia tlačidlom **Start timer** až na tejto obrazovke (zároveň odomkne zvuk na iOS).
-- **Stopky** veľkým písmom.
-- **Aktuálny krok:** typ + veľká cieľová váha („**Pour to 150 g**“) + text inštrukcie.
-- **Ďalší krok:** náhľad s odpočtom („Next: Pour to 250 g in 0:12“).
-- **Progress bar** celej prípravy (podľa `target_time_s`).
-- Časované kroky sa prepínajú automaticky. 3 s pred zmenou krátky tón, pri zmene výraznejší tón a záblesk obrazovky. Na Androide aj vibrácia.
-- Manuálne kroky: tlačidlo **Next**.
-- Ovládanie: **Pause / Resume**, **Next / Skip**, **Finish**, v menu **Restart timer** a **Cancel brew** (s potvrdením, nič sa neuloží).
+Obrazovka vedie liatie: koľko má byť práve teraz na váhe a akou rýchlosťou liať.
+
+- Zhora nadol: malé stopky s celkovým časom receptu („0:52 / 3:00“) a názvom kroku („Step 3/7 · Pour“), **animovaný V60**, údaje o liatí, pás krokov, ovládanie.
+- **Animácia V60:** kanvica s prúdom (hrúbka podľa rýchlosti liatia), hladina v drippri stúpa pri liatí a klesá pri čakaní, pri bloome stmavne káva a objavia sa bublinky, pri *Swirl* / *Stir* sa dripper zavlní, do servera kvapká káva a server sa plní. Animácia je len ilustrácia, čísla na obrazovke idú z receptu.
+- **Pri liatí:** veľké číslo „**100 g**“ (koľko má byť teraz na váhe, plynulo stúpa podľa času) a pod ním „**6.7 g/s** · to 150 g · 0:08 left“.
+- **Pri čakaní:** názov kroku („Let it bloom“) a „Next pour in 0:23 → 150 g“.
+- **Manuálny krok** (bez dĺžky): „Tap Next when done“.
+- **Drawdown** po poslednom kroku: „Let it drain“ a „Should be through by 3:00 · 0:42 left“. Po prekročení času receptu sa stopky zafarbia a zobrazí sa „+0:18 over the recipe“.
+- **Pás krokov:** každý krok taký dlhý, ako trvá, na konci úsek drawdownu do času receptu.
+- Stopky sa spustia tlačidlom **Start** (zároveň odomkne zvuk na iOS). Pred štartom je vidieť prvý krok („Bloom with 50 g · 50 g in 10 s · 5 g/s“).
+- Kroky sa prepínajú samy podľa dĺžky. Pri zmene kroku tón a záblesk (ak sú zvuky zapnuté).
+- Ovládanie: **Pause / Resume**, **Skip** (časovaný krok) alebo **Next** (manuálny), **Finish**, v drawdowne **Done**. V menu **Restart timer** a **Cancel brew**.
+- **Skip** posunie všetky ďalšie kroky skôr: preskočené čakanie neskráti nasledujúce liatie.
 - Šípka vľavo hore appku zminimalizuje: príprava beží ďalej a vráti sa cez kartu na Brew home.
-- Po poslednom kroku alebo po ťuknutí na **Finish** → Brew finish.
+- Logika je spoločná pre prekvapkávacie metódy (`isPourOver`), obrázok je zatiaľ len pre V60.
+
+### 3b. Brew run: ostatné recepty s krokmi
+
+- Veľké stopky, aktuálny krok s cieľovou váhou, náhľad ďalšieho kroku s odpočtom, progress bar podľa `target_time_s`.
+- Časované kroky sa prepínajú automaticky, manuálne tlačidlom **Next**. Po poslednom kroku alebo po **Finish** → Brew finish.
 
 ### 4. Brew run: Espresso
 
@@ -124,6 +135,7 @@ Tabuľka `active_run` v Dexie (najviac jeden záznam s `id = current`). Umožňu
 | Taste | rýchle tagy: *Sour, Bitter, Balanced, Weak, Strong, Astringent, Sweet* (viac naraz) |
 | Notes | prázdne |
 
+- **V60:** pod časom je porovnanie s receptom („0:27 slower than the recipe (3:00)“, „0:20 faster…“, do ±5 s „On recipe time“). Rovnaký text je v detaile prípravy, v histórii sa pri odchýlke zobrazí „+0:27“. Pomáha odhaliť príliš jemné alebo hrubé mletie.
 - **Save** uloží prípravu aj bez hodnotenia (dá sa doplniť neskôr).
 - Po uložení: kontrola zostatku pod 5 g a návrat na Brew home.
 
@@ -156,7 +168,9 @@ Rýchly zápis bez stopiek: Coffee / Bag, Method, Dose, Water / Yield (voliteľn
 - [ ] Recept spustím z karty receptu, z Brew home alebo cez Choose recipe.
 - [ ] V Brew setup je predvybraný vhodný balíček a pri nedostatku kávy vidím upozornenie.
 - [ ] Zmena dávky pred štartom prepočíta vodu aj kroky bez zmeny receptu.
-- [ ] Pri V60 vidím stopky, aktuálny krok s cieľovou váhou a odpočet do ďalšieho kroku. Časované kroky sa prepínajú samy so zvukovým signálom.
+- [ ] Pri V60 vidím, koľko má byť práve teraz na váhe a akou rýchlosťou (g/s) liať, pri čakaní odpočet do ďalšieho liatia. Kroky sa prepínajú samy.
+- [ ] Animovaný V60 ukazuje liatie, bloom, čakanie, swirl a drawdown.
+- [ ] Po dokončení V60 vidím, o koľko bola príprava rýchlejšia alebo pomalšia ako recept.
 - [ ] Počas prípravy obrazovka nezhasne.
 - [ ] Po zatvorení a znovuotvorení appky príprava pokračuje so správnym časom a krokom.
 - [ ] Pri Espresse vidím cieľové pásmo času a po zastavení zadám výťažok.

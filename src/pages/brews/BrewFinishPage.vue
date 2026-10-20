@@ -23,8 +23,9 @@ import {
     validateBrewForm,
     type BrewFormState,
 } from '@/modules/brews/form'
+import { brewTargetS, timeVerdict } from '@/modules/brews/pourover'
 import { elapsedMs } from '@/modules/brews/timer'
-import { formatSeconds } from '@/modules/recipes/recipe'
+import { formatSeconds, parseSeconds } from '@/modules/recipes/recipe'
 import type { Brew } from '@/types/models'
 import { useActiveRun } from '@/modules/brews/useBrews'
 
@@ -83,6 +84,15 @@ watch(
 const name = computed(() => steepingBrew.value?.recipe_snapshot?.name ?? run.value?.snapshot.name)
 const method = computed(() => form.value?.method ?? 'v60')
 
+/** "0:18 slower than the recipe (3:00)" */
+const timeHint = computed(() => {
+    const target = brewTargetS(run.value?.snapshot ?? null)
+    const time = form.value ? parseSeconds(form.value.time) : null
+    const verdict = timeVerdict(time !== null && !Number.isNaN(time) ? time : null, target)
+
+    return verdict && `${verdict.label} (${formatSeconds(target!)})`
+})
+
 async function save(): Promise<void> {
     if (!form.value || saving.value) return
     errors.value = validateBrewForm(form.value)
@@ -138,6 +148,7 @@ function afterLow(): void {
                     v-model="form"
                     :errors="errors"
                     :focus-yield="method === 'espresso'"
+                    :time-hint="steepingId ? null : timeHint"
                 />
             </section>
 
