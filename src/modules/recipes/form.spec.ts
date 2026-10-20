@@ -6,7 +6,7 @@ describe('recipe form', () => {
         const form = emptyRecipeForm('v60')
 
         expect(form).toMatchObject({ dose: '15', water: '250', target_time: '3:00' })
-        expect(form.steps).toHaveLength(4)
+        expect(form.steps).toHaveLength(6)
         expect(form.steps.every((step) => step.id)).toBe(true)
     })
 
@@ -54,7 +54,7 @@ describe('recipe form', () => {
     it('reports step problems against the total water', () => {
         const form = { ...emptyRecipeForm('v60'), name: 'x', water: '200' }
 
-        expect(validateRecipe(form).stepErrors).toHaveProperty('2')
+        expect(validateRecipe(form).stepErrors).toHaveProperty('4')
     })
 
     it('accepts every template once named', () => {

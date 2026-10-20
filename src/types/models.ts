@@ -62,6 +62,11 @@ export interface RecipeStep {
     type: StepType
     /** Seconds from the start of the timer; null = manual step (tap "Next"). */
     at_s: number | null
+    /**
+     * Pour-over: how long the step lasts, null = until Next. Start times are derived
+     * from it. Missing on recipes saved before durations existed.
+     */
+    duration_s?: number | null
     /** Cumulative water on the scale, e.g. "pour to 150 g". */
     target_water_g: number | null
     text: string | null

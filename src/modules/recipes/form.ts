@@ -2,6 +2,7 @@ import type { BrewMethod, Draft, Recipe, RecipeStep, SteepPlace } from '@/types/
 import { parseNumber } from '@/modules/coffees/form'
 import { TEMPLATES } from './options'
 import { formatSeconds, parseSeconds, validateSteps, withStepIds } from './recipe'
+import { isPourOver, pourOverSteps, withStartTimes } from './steps'
 
 export interface RecipeFormState {
     name: string
@@ -87,7 +88,7 @@ export function recipeToForm(recipe: Recipe): RecipeFormState {
                 : text(Math.round((recipe.steep_time_min / 60) * 100) / 100),
         steep_place: recipe.steep_place,
         dilution: text(recipe.dilution),
-        steps: withStepIds(recipe.steps),
+        steps: withStepIds(isPourOver(recipe.method) ? pourOverSteps(recipe.steps) : recipe.steps),
         coffee_id: recipe.coffee_id,
         is_favorite: recipe.is_favorite,
         notes: recipe.notes ?? '',
@@ -177,7 +178,10 @@ export function formToRecipe(form: RecipeFormState): Draft<Recipe> {
         steep_time_min: coldBrew && steepHours !== null ? Math.round(steepHours * 60) : null,
         steep_place: coldBrew ? form.steep_place : null,
         dilution: coldBrew ? parseNumber(form.dilution) : null,
-        steps: form.steps.map((step) => ({ ...step, text: step.text?.trim() || null })),
+        steps: (isPourOver(form.method) ? withStartTimes(form.steps) : form.steps).map((step) => ({
+            ...step,
+            text: step.text?.trim() || null,
+        })),
         coffee_id: form.coffee_id,
         is_favorite: form.is_favorite,
         notes: blank(form.notes),

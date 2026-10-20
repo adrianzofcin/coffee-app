@@ -2,12 +2,22 @@
 import { ArrowDown, ArrowUp, Hand, Pencil } from 'lucide-vue-next'
 import { stepTitle } from '@/modules/recipes/options'
 import { formatSeconds } from '@/modules/recipes/recipe'
+import { pourRate } from '@/modules/recipes/steps'
 import type { RecipeStep } from '@/types/models'
 
-withDefaults(
+const props = withDefaults(
     defineProps<{ steps: RecipeStep[]; editable?: boolean; errors?: Record<number, string> }>(),
     { editable: false, errors: () => ({}) },
 )
+
+/** Pour-over: "15 s · 6.7 g/s" */
+function timing(index: number): string | null {
+    const duration = props.steps[index]?.duration_s
+    if (duration == null) return null
+    const rate = pourRate(props.steps, index)
+
+    return rate === null ? `${duration} s` : `${duration} s · ${Math.round(rate * 10) / 10} g/s`
+}
 
 defineEmits<{ edit: [index: number]; move: [index: number, direction: -1 | 1] }>()
 </script>
@@ -49,7 +59,14 @@ defineEmits<{ edit: [index: number]; move: [index: number, direction: -1 | 1] }>
                     <p class="font-semibold">{{ step.text }}</p>
                 </template>
                 <template v-else>
-                    <p class="font-semibold">{{ stepTitle(step) }}</p>
+                    <p class="flex items-baseline justify-between gap-2">
+                        <span class="font-semibold">{{ stepTitle(step) }}</span>
+                        <span
+                            v-if="timing(index)"
+                            class="tabular shrink-0 text-xs font-semibold text-text-muted"
+                            >{{ timing(index) }}</span
+                        >
+                    </p>
                     <p v-if="step.text" class="text-sm text-text-muted">{{ step.text }}</p>
                 </template>
                 <p v-if="errors[index]" class="mt-1 text-sm text-danger">{{ errors[index] }}</p>

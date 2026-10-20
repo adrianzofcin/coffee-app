@@ -28,6 +28,7 @@ import {
 } from '@/modules/recipes/form'
 import { METHODS, STEEP_PLACES } from '@/modules/recipes/options'
 import { formatRatio, ratio, type ScalableRecipe } from '@/modules/recipes/recipe'
+import { isPourOver, waterBefore, withStartTimes } from '@/modules/recipes/steps'
 import type { BrewMethod, RecipeStep } from '@/types/models'
 
 const route = useRoute()
@@ -62,6 +63,7 @@ watch(
 
 const espresso = computed(() => form.value.method === 'espresso')
 const coldBrew = computed(() => form.value.method === 'cold_brew')
+const pourOver = computed(() => isPourOver(form.value.method))
 
 function pickMethod(method: BrewMethod): void {
     if (method !== form.value.method) form.value = switchMethod(form.value, method)
@@ -107,22 +109,31 @@ function editStep(index: number): void {
     stepSheetOpen.value = true
 }
 
+/** Pour-over steps follow one another, so start times change with every edit. */
+function setSteps(steps: RecipeStep[]): void {
+    form.value.steps = pourOver.value ? withStartTimes(steps) : steps
+}
+
+const previousWater = computed(() =>
+    waterBefore(form.value.steps, editingIndex.value ?? form.value.steps.length),
+)
+
 function saveStep(step: RecipeStep): void {
     const steps = [...form.value.steps]
     if (editingIndex.value === null) steps.push(step)
     else steps[editingIndex.value] = step
-    form.value.steps = steps
+    setSteps(steps)
 }
 
 function removeStep(): void {
-    form.value.steps = form.value.steps.filter((_, i) => i !== editingIndex.value)
+    setSteps(form.value.steps.filter((_, i) => i !== editingIndex.value))
 }
 
 function moveStep(index: number, direction: -1 | 1): void {
     const steps = [...form.value.steps]
     const [step] = steps.splice(index, 1)
     steps.splice(index + direction, 0, step!)
-    form.value.steps = steps
+    setSteps(steps)
 }
 
 // Scale
@@ -393,6 +404,8 @@ async function save(): Promise<void> {
             v-model:open="stepSheetOpen"
             :step="editingStep"
             :suggested-start="suggestedStart"
+            :pour-over="pourOver"
+            :previous-water="previousWater"
             @save="saveStep"
             @remove="removeStep"
         />

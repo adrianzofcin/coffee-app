@@ -42,21 +42,28 @@ Kroky sú uložené priamo v recepte ako pole. Vždy sa upravujú spolu s recept
 
 ```json
 [
-    { "type": "bloom", "at_s": 0,   "target_water_g": 50,  "text": "Pour gently, wet all grounds" },
-    { "type": "pour",  "at_s": 45,  "target_water_g": 150, "text": null },
-    { "type": "pour",  "at_s": 75,  "target_water_g": 250, "text": null },
-    { "type": "swirl", "at_s": 105, "target_water_g": null, "text": "Swirl and let it drain" }
+    { "type": "bloom", "at_s": 0,  "duration_s": 10, "target_water_g": 50,   "text": "Pour gently, wet all grounds" },
+    { "type": "wait",  "at_s": 10, "duration_s": 30, "target_water_g": null, "text": "Let it bloom" },
+    { "type": "pour",  "at_s": 40, "duration_s": 15, "target_water_g": 150,  "text": null },
+    { "type": "wait",  "at_s": 55, "duration_s": 15, "target_water_g": null, "text": null },
+    { "type": "pour",  "at_s": 70, "duration_s": 15, "target_water_g": 250,  "text": null },
+    { "type": "swirl", "at_s": 85, "duration_s": 5,  "target_water_g": null, "text": "Swirl and let it drain" }
 ]
 ```
 
 | Pole | Popis |
 |---|---|
 | `type` | `bloom`, `pour`, `wait`, `stir`, `swirl`, `filter`, `custom` |
-| `at_s` | Kedy krok začína (sekundy od štartu stopiek). `null` = **manuálny krok**, pokračuje sa ťuknutím na *Next* (napr. kroky Cold Brew) |
+| `at_s` | Kedy krok začína (sekundy od štartu stopiek). `null` = **manuálny krok**, pokračuje sa ťuknutím na *Next* (napr. kroky Cold Brew). Pri V60 sa dopočíta z `duration_s` |
+| `duration_s` | Len V60: ako dlho krok trvá, `null` = kým sa neťukne na *Next*. Pri liatí (`bloom`, `pour`) z neho vychádza rýchlosť liatia v g/s |
 | `target_water_g` | **Kumulatívna** cieľová váha vody na váhe (napr. „pour to 150 g“), `null` ak sa nelieva |
 | `text` | Voliteľná inštrukcia. Bez nej sa zobrazí predvolený text podľa typu (napr. *Pour to 150 g*) |
 
-Poradie krokov je dané poradím v poli. Trvanie kroku = `at_s` nasledujúceho kroku − `at_s` aktuálneho. Posledný časovaný krok trvá do `target_time_s`.
+Poradie krokov je dané poradím v poli.
+
+- **V60:** kroky idú za sebou, každý začína, keď predošlý skončí (`at_s` = súčet `duration_s` predošlých krokov). Bloom sa delí na naliatie (`bloom`, napr. 50 g za 10 s) a čakanie (`wait` „Let it bloom“). Rýchlosť liatia = (cieľová váha − voda už na váhe) / `duration_s`. Po poslednom kroku nasleduje drawdown do `target_time_s`.
+- **Staršie V60 recepty** (len `at_s`, bez `duration_s`) appka prevedie pri zobrazení: `bloom` dostane 10 s, `pour` 15 s (najviac do ďalšieho kroku), zvyšok medzery sa stane krokom `wait`, ostatné kroky trvajú do ďalšieho kroku. Pri uložení receptu sa uloží nový tvar.
+- **Ostatné metódy:** trvanie kroku = `at_s` nasledujúceho kroku − `at_s` aktuálneho. Posledný časovaný krok trvá do `target_time_s`.
 
 ## Prepočet dávky (scaling)
 
@@ -99,13 +106,13 @@ Vzorové recepty vytvára **databáza**, nie appka: funkcia `seed_recipes` sa sp
 2. **Basics**: Name, Dose, Water / Yield (pomer sa zobrazuje živo), Temperature, Grind setting.
 3. **Method specific**: polia podľa tabuľky vyššie.
 4. **Steps** (V60 a Cold Brew, pri Espresse voliteľné):
-   - pridanie kroku (výber typu), úprava v bottom sheete (čas `m:ss`, cieľová váha, text),
-   - presúvanie šípkami ↑ ↓ (spoľahlivejšie ako ťahanie na mobile), mazanie,
-   - prepínač **Timed / Manual** pre krok.
+   - pridanie kroku (výber typu), úprava v bottom sheete (cieľová váha, text; pri V60 **Duration** v sekundách s rýchlosťou liatia „100 g in 20 s · 5 g/s“, inak začiatok `m:ss`),
+   - presúvanie šípkami ↑ ↓ (spoľahlivejšie ako ťahanie na mobile), mazanie. Pri V60 sa začiatky krokov po každej zmene prepočítajú,
+   - prepínač **Fixed duration** (V60) alebo **Timed** (ostatné), vypnutý = krok trvá do *Next*.
 5. **More**: priradená káva, Favorite, Notes.
 
 - Tlačidlo **Scale** v sekcii krokov otvorí prepočet (rovnaký bottom sheet ako na detaile) a výsledok prenesie do formulára.
-- Nový recept začína šablónou podľa metódy (V60: Bloom → Pour → Pour → Swirl, Cold Brew: manuálne kroky, Espresso bez krokov). Zmena metódy šablónu vymení, názov, mletie, kávu a poznámky ponechá.
+- Nový recept začína šablónou podľa metódy (V60: Bloom 10 s → Wait 30 s → Pour 15 s → Wait 15 s → Pour 15 s → Swirl 5 s, Cold Brew: manuálne kroky, Espresso bez krokov). Zmena metódy šablónu vymení, názov, mletie, kávu a poznámky ponechá.
 - Pri neúspešnom uložení sa obrazovka posunie k prvej chybe.
 - Pri odchode s neuloženými zmenami appka zobrazí potvrdenie.
 
@@ -128,7 +135,7 @@ Zadám novú dávku, appka zobrazí prepočítané hodnoty. Voľby: **Save as ne
 - `temperature_c`: 0–100.
 - `target_time_max_s` ≥ `target_time_s`.
 - `steep_time_min`: 1–4320 (max. 72 h).
-- Kroky: `at_s` neklesá smerom dole v poradí krokov (manuálne kroky sa preskakujú). `target_water_g` neklesá a nesmie prekročiť `water_g`.
+- Kroky: `duration_s` (V60) je kladné číslo sekúnd alebo prázdne. `at_s` neklesá smerom dole v poradí krokov (manuálne kroky sa preskakujú). `target_water_g` neklesá a nesmie prekročiť `water_g`.
 
 ## Akceptačné kritériá
 

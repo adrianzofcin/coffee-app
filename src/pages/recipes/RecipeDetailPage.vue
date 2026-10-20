@@ -25,6 +25,7 @@ import {
     ratio,
     type ScalableRecipe,
 } from '@/modules/recipes/recipe'
+import { isPourOver, pourOverSteps } from '@/modules/recipes/steps'
 import { useRecipes } from '@/modules/recipes/useRecipes'
 
 const route = useRoute()
@@ -33,6 +34,13 @@ const { recipes, loaded } = useRecipes()
 const { coffees } = useCoffees()
 
 const recipe = computed(() => recipes.value.find((r) => r.id === route.params.id) ?? null)
+/** Older pour-over recipes are shown with durations, as the editor will save them. */
+const steps = computed(() => {
+    const r = recipe.value
+    if (!r) return []
+
+    return isPourOver(r.method) ? pourOverSteps(r.steps) : r.steps
+})
 const coffee = computed(() =>
     recipe.value?.coffee_id
         ? (coffees.value.find((c) => c.id === recipe.value!.coffee_id && !c.deleted_at) ?? null)
@@ -184,7 +192,7 @@ async function remove(): Promise<void> {
 
             <section v-if="recipe.steps.length" class="animate-rise [animation-delay:60ms]">
                 <h2 class="font-display font-soft mb-3 text-xl font-semibold">Steps</h2>
-                <StepTimeline :steps="recipe.steps" />
+                <StepTimeline :steps="steps" />
             </section>
 
             <section v-if="recipe.notes" class="animate-rise [animation-delay:90ms]">

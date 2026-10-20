@@ -107,8 +107,8 @@ describe('scaleRecipe', () => {
 
         expect(scaled.dose_g).toBe(20)
         expect(scaled.water_g).toBe(333)
-        expect(scaled.steps.map((s) => s.target_water_g)).toEqual([67, 200, 333, null])
-        expect(scaled.steps.map((s) => s.at_s)).toEqual([0, 45, 75, 105])
+        expect(scaled.steps.map((s) => s.target_water_g)).toEqual([67, null, 200, null, 333, null])
+        expect(scaled.steps.map((s) => s.at_s)).toEqual([0, 10, 40, 55, 70, 85])
     })
 
     it('keeps one decimal for espresso yield', () => {

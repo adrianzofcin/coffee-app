@@ -36,6 +36,9 @@
 | D28 | 2026-10-20 | Brew home zobrazuje všetky prebiehajúce prípravy: rozbehnutú prípravu na zariadení aj každé lúhujúce Cold Brew | Požiadavka vlastníka |
 | D29 | 2026-10-20 | Stopky sa spúšťajú až na obrazovke prípravy (Start timer), nie v Brew setup | Čas na prípravu pred nalievaním, ťuknutie odomkne zvuk na iOS |
 | D30 | 2026-10-20 | Zvuky krokov sú generované tóny (Web Audio) s prepínačom v Settings, uloženým len na zariadení | Bez zvukových súborov, nastavenie sa týka konkrétneho telefónu |
+| D31 | 2026-10-20 | Kroky V60 majú dĺžku (`duration_s`), začiatky sa z nej dopočítajú. Bloom = naliatie + samostatný krok Wait | Z dĺžky vychádza rýchlosť liatia v g/s, úprava jedného kroku posunie ostatné. Požiadavka vlastníka |
+| D32 | 2026-10-20 | Staršie V60 recepty sa prevádzajú v appke pri zobrazení, nie migráciou dát | Kroky sú `jsonb`, prevod je jednoduchší a otestovaný v TypeScripte. Migrácia mení len vzorový recept pre nových používateľov |
+| D33 | 2026-10-20 | Čas prípravy sa porovnáva s celkovým časom receptu, bez odporúčaní (mletie, teplota) | Používateľ sám vidí, či voda pretiekla príliš rýchlo alebo pomaly. Odporúčania možno neskôr |
 
 ## Otvorené otázky a testy
 

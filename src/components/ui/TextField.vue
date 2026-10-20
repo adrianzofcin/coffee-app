@@ -11,6 +11,7 @@ withDefaults(
         placeholder?: string
         suffix?: string
         error?: string | null
+        hint?: string | null
         multiline?: boolean
         autocapitalize?: string
     }>(),
@@ -53,5 +54,6 @@ const id = useId()
             </span>
         </div>
         <p v-if="error" class="mt-1.5 text-sm text-danger">{{ error }}</p>
+        <p v-else-if="hint" class="tabular mt-1.5 text-sm text-text-muted">{{ hint }}</p>
     </div>
 </template>
