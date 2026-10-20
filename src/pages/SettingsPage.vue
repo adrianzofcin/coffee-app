@@ -19,6 +19,8 @@ import PageHeader from '@/components/layout/PageHeader.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import InstallHint from '@/components/InstallHint.vue'
+import ToggleRow from '@/components/ui/ToggleRow.vue'
+import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { usePwaStore, type UpdateCheckResult } from '@/stores/pwa'
 import { useThemeStore, type ThemeMode } from '@/stores/theme'
@@ -67,6 +69,7 @@ const syncInfo = computed(() => {
     return { icon: CloudCheck, tone: 'text-success', title: 'All synced', detail: lastSynced.value }
 })
 const theme = useThemeStore()
+const preferences = usePreferencesStore()
 const router = useRouter()
 
 const version = `${__APP_VERSION__} · ${__APP_BUILD__}`
@@ -153,6 +156,21 @@ async function logout(): Promise<void> {
                         <component :is="option.icon" class="size-4" />
                         {{ option.label }}
                     </button>
+                </div>
+            </section>
+
+            <section class="animate-rise [animation-delay:75ms]">
+                <h2
+                    class="mb-2.5 px-1 text-xs font-semibold tracking-[0.14em] text-text-muted uppercase"
+                >
+                    Brewing
+                </h2>
+                <div class="rounded-card border border-border/60 bg-surface px-4 py-2">
+                    <ToggleRow
+                        v-model="preferences.sounds"
+                        label="Sounds"
+                        hint="Beep and vibrate when a brew step changes"
+                    />
                 </div>
             </section>
 

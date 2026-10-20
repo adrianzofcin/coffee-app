@@ -75,6 +75,42 @@ const router = createRouter({
             meta: { layout: 'app', title: 'Brew' },
         },
         {
+            path: '/brew/new',
+            name: 'brew-setup',
+            component: () => import('@/pages/brews/BrewSetupPage.vue'),
+            meta: { layout: 'sub', title: 'New brew' },
+        },
+        {
+            path: '/brew/run',
+            name: 'brew-run',
+            component: () => import('@/pages/brews/BrewRunPage.vue'),
+            meta: { layout: 'blank', title: 'Brewing' },
+        },
+        {
+            path: '/brew/finish',
+            name: 'brew-finish',
+            component: () => import('@/pages/brews/BrewFinishPage.vue'),
+            meta: { layout: 'sub', title: 'How was it?' },
+        },
+        {
+            path: '/brew/quick',
+            name: 'brew-quick',
+            component: () => import('@/pages/brews/BrewLogPage.vue'),
+            meta: { layout: 'sub', title: 'Quick log' },
+        },
+        {
+            path: '/brews/:id',
+            name: 'brew-detail',
+            component: () => import('@/pages/brews/BrewDetailPage.vue'),
+            meta: { layout: 'sub', title: 'Brew' },
+        },
+        {
+            path: '/brews/:id/edit',
+            name: 'brew-edit',
+            component: () => import('@/pages/brews/BrewLogPage.vue'),
+            meta: { layout: 'sub', title: 'Edit brew' },
+        },
+        {
             path: '/stats',
             name: 'stats',
             component: () => import('@/pages/StatsPage.vue'),

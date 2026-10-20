@@ -11,7 +11,7 @@ Osobná kávová aplikácia, optimalizovaná pre mobil a inštaláciu ako PWA. V
 | 3rd party služby | [03-third-party.md](03-third-party.md) | schválené |
 | Offline a synchronizácia | [04-offline-sync.md](04-offline-sync.md) | schválené |
 | Vizuálny štýl | [05-design.md](05-design.md) | schválené (upravuje sa priebežne) |
-| Obsah (moduly) | [content/README.md](content/README.md) | Coffees a Recipes implementované, Brew schválené, Stats plán |
+| Obsah (moduly) | [content/README.md](content/README.md) | Coffees, Recipes a Brew implementované, Stats plán |
 | Rozhodnutia, otvorené otázky, testy | [decisions.md](decisions.md) | priebežne |
 
 ## Plán implementácie
@@ -23,7 +23,7 @@ Osobná kávová aplikácia, optimalizovaná pre mobil a inštaláciu ako PWA. V
 | **F1: Dáta a sync** ✅ (lokálne hotové) | Migrácie (`profiles`, spoločné stĺpce, RLS, triggery), Dexie, outbox, sync engine, indikátor synchronizácie, Storage pre fotky | F0 |
 | **F2: Coffees** ✅ (lokálne hotové) | [content/coffees.md](content/coffees.md) | F1 |
 | **F3: Recipes** ✅ (lokálne hotové) | [content/recipes.md](content/recipes.md) vrátane vzorových receptov | F1 |
-| **F4: Brew** | [content/brew.md](content/brew.md), testy T2 a T3 | F2, F3 |
+| **F4: Brew** ✅ (lokálne hotové) | [content/brew.md](content/brew.md), testy T2 a T3 | F2, F3 |
 | **F5: Stats a export** | [content/stats.md](content/stats.md) | F4 |
 
 Každá fáza sa nasadí a vyskúša na mobile pred začatím ďalšej.

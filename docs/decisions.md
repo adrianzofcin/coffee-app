@@ -32,6 +32,10 @@
 | D24 | 2026-10-19 | Vzorové recepty vytvára databáza (`seed_recipes` pri novom používateľovi), nie appka | Žiadne duplikáty pri viacerých zariadeniach, menej logiky v klientovi |
 | D25 | 2026-10-19 | Poradie krokov receptu sa mení šípkami ↑ ↓, nie ťahaním | Drag & drop na mobile koliduje so scrollovaním |
 | D26 | 2026-10-19 | Nový recept začína šablónou krokov podľa metódy | Rýchlejšie vytvorenie, netreba začínať od nuly |
+| D27 | 2026-10-20 | Prípravu možno spustiť aj zapísať bez výberu kávy (`brews.bag_id` je voliteľné), nič sa neodpočíta | Požiadavka vlastníka |
+| D28 | 2026-10-20 | Brew home zobrazuje všetky prebiehajúce prípravy: rozbehnutú prípravu na zariadení aj každé lúhujúce Cold Brew | Požiadavka vlastníka |
+| D29 | 2026-10-20 | Stopky sa spúšťajú až na obrazovke prípravy (Start timer), nie v Brew setup | Čas na prípravu pred nalievaním, ťuknutie odomkne zvuk na iOS |
+| D30 | 2026-10-20 | Zvuky krokov sú generované tóny (Web Audio) s prepínačom v Settings, uloženým len na zariadení | Bez zvukových súborov, nastavenie sa týka konkrétneho telefónu |
 
 ## Otvorené otázky a testy
 

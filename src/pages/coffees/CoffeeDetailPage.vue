@@ -16,6 +16,8 @@ import { useCoffees } from '@/modules/coffees/useCoffees'
 import type { BagView } from '@/modules/coffees/balance'
 import RecipeCard from '@/components/recipes/RecipeCard.vue'
 import { useRecipes } from '@/modules/recipes/useRecipes'
+import BrewRow from '@/components/brews/BrewRow.vue'
+import { useBrews } from '@/modules/brews/useBrews'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +25,14 @@ const { views, loaded } = useCoffees()
 const { recipes } = useRecipes()
 
 const coffeeRecipes = computed(() => recipes.value.filter((r) => r.coffee_id === route.params.id))
+
+const { brews } = useBrews()
+const coffeeBrews = computed(() => {
+    const bagIds = new Set(view.value?.bags.map((b) => b.bag.id))
+
+    return brews.value.filter((brew) => brew.bag_id && bagIds.has(brew.bag_id))
+})
+const showAllBrews = ref(false)
 
 const view = computed(() => views.value.find((v) => v.coffee.id === route.params.id) ?? null)
 const coffee = computed(() => view.value?.coffee ?? null)
@@ -283,6 +293,30 @@ async function remove(): Promise<void> {
                 >
                     Dialled in a recipe for this coffee? Save it here.
                 </p>
+            </section>
+
+            <section v-if="coffeeBrews.length" class="animate-rise [animation-delay:210ms]">
+                <h2 class="mb-3 flex items-baseline justify-between">
+                    <span class="font-display font-soft text-xl font-semibold">Brews</span>
+                    <span class="tabular text-sm text-text-muted"
+                        >{{ coffeeBrews.length }} so far</span
+                    >
+                </h2>
+                <div class="space-y-2">
+                    <BrewRow
+                        v-for="brew in showAllBrews ? coffeeBrews : coffeeBrews.slice(0, 5)"
+                        :key="brew.id"
+                        :brew="brew"
+                    />
+                </div>
+                <button
+                    v-if="coffeeBrews.length > 5 && !showAllBrews"
+                    type="button"
+                    class="mt-3 text-sm font-semibold text-accent"
+                    @click="showAllBrews = true"
+                >
+                    Show all {{ coffeeBrews.length }}
+                </button>
             </section>
         </div>
 

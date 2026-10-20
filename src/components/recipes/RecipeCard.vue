@@ -57,13 +57,13 @@ defineProps<{ recipe: Recipe; coffeeName?: string | null }>()
                     :stroke-width="1.75"
                 />
             </button>
-            <span
-                class="flex size-9 items-center justify-center rounded-full bg-surface-muted text-text-muted/60"
-                title="Brewing is coming next"
-                aria-hidden="true"
+            <RouterLink
+                :to="`/brew/new?recipe=${recipe.id}`"
+                class="pressable bg-accent-gradient flex size-9 items-center justify-center rounded-full text-white shadow-[0_6px_14px_-6px_var(--accent)]"
+                :aria-label="`Brew ${recipe.name}`"
             >
-                <Play class="size-4 translate-x-px" />
-            </span>
+                <Play class="size-4 translate-x-px fill-current" />
+            </RouterLink>
         </div>
     </div>
 </template>

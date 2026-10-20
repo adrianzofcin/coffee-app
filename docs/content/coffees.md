@@ -102,7 +102,7 @@ remaining_g = bags.weight_g
 - Sekcia **Bags**: aktívne hore, dopité zbalené pod „Finished bags (N)“.
   - Riadok balíčka: dátum praženia + `Day N`, zostatok / hmotnosť, stav, cena.
   - Ťuknutie → akcie balíčka (bottom sheet).
-- Sekcia **Brews**: posledné prípravy s touto kávou (doplní modul Brew).
+- Sekcia **Brews**: počet príprav so všetkými balíčkami kávy a posledných 5 (*Show all* zobrazí všetky).
 - Akcie: **Add bag**, **Edit**, **Delete** (v menu).
 
 ### 3. Add coffee (`/coffees/new`)

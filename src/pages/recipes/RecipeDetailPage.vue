@@ -203,8 +203,8 @@ async function remove(): Promise<void> {
             <div
                 class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg border-t border-border/50 bg-bg/90 px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl"
             >
-                <AppButton block disabled>
-                    <Play class="size-5 fill-current" /> Brew · coming next
+                <AppButton block @click="router.push(`/brew/new?recipe=${recipe.id}`)">
+                    <Play class="size-5 fill-current" /> Brew
                 </AppButton>
             </div>
         </Teleport>
